@@ -1,0 +1,131 @@
+## Curso de R no IPÊ
+### Script do dia 4.2: PCA
+*Marcos V. C. Vital e participantes da turma de 2014*
+
+Para mais material, acesse <http://marcosvital.wordpress.com/>
+\
+\ 
+
+Este documento é a 2a parte do quarto de uma série que nasceu durante as atividades do "Curso de introdução ao uso do software R e suas aplicações estatísticas nas ciências biológicas", realizado no IPÊ em dezembro de 2014.  
+
+Nesta parte do guia  nós vamos realizar uma análise de componentes principais, e vamos explorar seus resultados utlizando-os de várias maneiras.
+
+Como sempre, todo o documento foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+\
+\ 
+
+**Antes de começar, carregue os dados necessários:**
+```{r}
+setwd("C:/R/Curso IPÊ")
+dados<-read.table("insetos.txt", h=T, row.names=1)
+attach(dados)
+
+#Aqui um summary vai ser muito carregado, então vou usar um str:
+str(dados)
+```
+
+\ 
+
+*****
+
+####A tal da PCA
+
+Existem diversas funções diferentes no R para calcular uma PCA. Aqui nós vamos usar a função `rda` do pacote `vegan`.
+
+Não há muito mistério: basta executar a função `rda` com o argumento `scale=T`, que faz com que os dados sejam padronizados (uma característica da PCA). Depois, é só chamar o `summary`. Note que o resultado será um pouco longo, ok?
+
+Aí está:
+
+```{r}
+
+dados.amb<-dados[,3:6]
+
+library(vegan)
+
+resultado.pca<-rda(dados.amb, scale=T)
+
+summary(resultado.pca)
+
+```
+
+**Plotando de maneira rápida**
+
+Não tem mistério aqui, vamos usar a função `biplot`:
+
+```{r}
+biplot(resultado.pca)
+```
+
+Se quiser plotar outros componentes, você pode usar o argumento `choices`. Experimente, por exemplo:
+
+```{r}
+biplot(resultado.pca, choices=c(1,3))  #Plotando os componentes 1 e 3
+```
+
+
+**Incluindo uma variável categórica no grpafico:**
+
+Podemos delimitar os pontos de mata primária e de mata secundária no nosso gráfico assim:
+
+```{r}
+biplot(resultado.pca, display="sites")
+
+ordihull(resultado.pca, group=Ambiente,
+show="Mata_Primária", col="green")
+
+ordihull(resultado.pca, group=Ambiente,
+show="Mata_Secundária", col="red")
+```
+
+Os detalhes:
+
+- usamos o argumento `display="sites"` para mostrar apenas os locais de coleta, sem as variáveis;
+- usamos a função `ordihull` para criar polígonos;
+
+Se quiser, confira também o mesmo procedimento acima com a função `ordiellipse`.
+
+\ 
+
+####Brincando com os resultados da PCA
+
+DE novo, vamos explorar os dados sem muito compromisso, apenas para ver como podemos lidar com este tipo de análise no R.
+
+**Extraindo os valores dos componentes principais**
+
+Esta é uma etapa essencial, se quisermos usar os resultados da PCA em outras análises. É bem simples:
+
+```{r}
+pc1<-resultado.pca$CA$u[,1]
+pc2<-resultado.pca$CA$u[,2]
+```
+
+**Exemplinho rápido com teste T:**
+
+```{r}
+t.test(pc1~Ambiente, var.equal=T)
+boxplot(pc1~Ambiente)
+```
+
+**E exemplinho rápido com regressão:**
+
+```{r}
+abundâncias<-rowSums(dados[,7:40])
+
+modelo<-lm(abundâncias~pc1)
+summary(modelo)
+
+plot(abundâncias~pc1, pch=16)
+abline(modelo, lty=2, col="red")
+```
+
+Aqui notem que eu usei a função `rowSums` para calcular as abundâncias totais das espécies.
+
+\ 
+
+**E é isso aí, dois do dia já foram, ainda falta um. Nos vemos lá!**

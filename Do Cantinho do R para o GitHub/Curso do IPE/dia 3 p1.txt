@@ -1,0 +1,242 @@
+## Curso de R no IPÊ
+### Script do dia 3.1: ANOVA
+*Marcos V. C. Vital e participantes da turma de 2014*
+
+Para mais material, acesse <http://marcosvital.wordpress.com/>
+\
+\ 
+
+Este documento é o terceiro de uma série que nasceu durante as atividades do "Curso de introdução ao uso do software R e suas aplicações estatísticas nas ciências biológicas", realizado no IPÊ em dezembro de 2014.  
+
+Neste terceiro guia nós vamos: realizar uma ANOVA, brincar com mais algumas funcionalidades gráficas do R e, de quebra, dar uma olhadinha em como se faz um teste de Kruskal Wallis.
+
+Como sempre, todo o documento foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+\
+\ 
+
+**Antes de começar, carregue os dados necessários:**
+```{r}
+setwd("C:/R/Curso IPÊ")
+dados<-read.table("cultivo.txt", h=T)
+attach(dados)
+
+summary(dados)
+```
+
+\ 
+
+*****
+
+####A boa e velha ANOVA:
+
+Com os dados acima, que mostram a densidade de uma praga em diferentes métodos de cultivo, nós vamos realizar uma análise de variância (carinhosamente conhecida por ANOVA) para testar a hipótese de que os métodos incluenciam a densidade da praga.
+
+**De novo, homogeneidade de variâncias**
+
+O mesmo pressuposto que vimos la no teste T se aplica aqui, e vamos testá-lo do mesmo jeito:
+
+```{r}
+library(car) #Carregando o pacote necessário
+
+leveneTest(pragas~cultivo)
+```
+Tudo beleza por aqui, pressuposto atendido!
+
+**E o pressuposto da normalidade?**
+
+Aqui nós vamos trabalhar com este pressuposto de uma maneira diferente. Veja só, a ANOVA faz parte de uma família de testes estatísticos chamados de modelos lineares. Nestes modelos, o fundamental é que os resíduos da análise sigam a distribuição normal. Então aqui as coisas mudam um pouco de ordem: primeiro criamos o modelo, depois verificamos o pressuposto.
+
+Vamos lá, primeiro criando o modelo da ANOVA:
+
+```{r}
+resultado<-aov(pragas~cultivo)
+```
+
+Pois é, é só isso mesmo! Como salvamos o modelo dentro de um objeto, não podemos ver o resultado, a não ser que a gente o chame com a função `summary`. Mas não vamos fazer isso ainda; vamos, primeiro, conferir o tal pressuposto da normalidade dos resíduos, certo?
+
+```{r}
+shapiro.test(resultado$residuals)
+```
+
+Aqui tudo ok de novo! Então vamos conferir os resultados!
+
+```{r}
+summary(resultado)
+```
+
+Pronto!
+
+A ANOVA nos indicou um resultado estatisticamente significativo. Neste caso, porém, isto quer dizer apenas que pelo menos duas médias diferem entre si. Se quisermos saber quais médias diferem de quem, temos que dar continuidade com a análise, e existem algumas abordagens distintas para se fazer isso. Vamos, por simplicidade, olhar para uma das mais comuns delas: os testes a posteirori. 
+
+Segue a execução do teste de Tukey:
+
+```{r}
+TukeyHSD(resultado)
+```
+
+Que nos indica que apenas um dos pares (cultivo próximo à mata e cultivo com áreas de refúgio) não diferem entre si.
+
+Até aqui vimos duas funções novas:
+
+- `aov` é a função que calcula a ANOVA;
+- `TukeyHSD` realiza o teste a posteriori de Tukey (e usa o resultado da anova como objeto);
+
+
+**Agora, que tal um gráfico?**
+
+Vamos fazer o mesmo tipo de gráfico que usamos para o teste T:
+
+```{r}
+library(sciplot)
+
+lineplot.CI(cultivo, pragas, type="p")
+```
+
+Bacana, mas notaram uma coisa: a classe "ausente", que encaramos como um tipo de controle, ficou como a segunda classe na ordem do gráfico. Isto acontece porque o R usa ordem alfabética para organizar os níveis de um fator. Então precisamos mudar de ordem e refazer o gráfico. Podemos usar a função `relevel` para isso:
+
+```{r}
+dados$cultivo<-relevel(cultivo, ref="ausente")
+detach(dados)
+attach(dados)
+
+lineplot.CI(cultivo, pragas, type="p")
+```
+
+Agora sim!
+
+\ 
+
+####Vamos mexer um pouco neste gráfico!
+
+Vamos trabalhar mais neste último gráfico? Vamos imaginar que, por algum motivo, você queira que os nomes das categorias do eixo x sejam apresentadas na vertical, e não na horizontal (não há muito porque fazer isto neste exemplo, mas vamos seguir adiante apenas para explorar a questão, ok?).
+
+Fazer isto é bem fácil, basta adicionar o argumento `las=2`, e pronto:
+
+```{r}
+lineplot.CI(cultivo, pragas, type="p", las=2)
+```
+
+É, funcionou. Maaaaaaaas, ficou com probleminhas, não foi? Um dos nomes é grande para o espaço do gráfico, então temos que trabalhar nisso. Vamos, então, criar o gráfico com mais preparação e argumentos. E vamos aproveitar a deixa para mexer em mais coisas, ok? Veja como é, e vamos comentar tudo o que fizemos logo depois:
+
+```{r}
+par(family="serif", mar=c(8, 4, 2, 2))
+
+lineplot.CI(cultivo, pragas, type="p",
+xlab="", ylab="Densidade da praga",
+cex.lab=1.2, cex.axis=1.2, las=2, ylim=c(20, 80))
+
+mtext("Tipo de cultivo", side=1, line=6.5,cex=1.2)
+
+text(x=1, y=74, "a")
+text(x=2, y=33, "c")
+text(x=3, y=52, "b")
+text(x=4, y=51, "b")
+```
+
+Ah, bem melhor! Vamos tentar entender tudo o que foi novidade aqui:
+
+- o comando `par` abre uma janela gráfica com os parâmetros que eu quiser estabelecer. Depois, todo o gráfico aberto atende àqueles parâmtros.
+- o argumento `family` serve para definir o tipo de fonte usada no gráfico;
+- o argumento `mar` serve para controlar as margens, os espaços em branco em volta da caixa do gráfico;
+- nós usamos `xlab=""` para ele não escrever o nome do eixo, senão ele o faria em uma posição ruim, sobreposta aos nomes das classes;
+- a função `mtext` adiciona texto na margem; neste caso, usamo-as para adicionar o nome do eixo x manualmente, na posição que escolhemo;
+- a função `text` serve para se adicionar texto em qualquer canto do gráfico; no nosso caso, a usamos para adicionar letrinhas em cima da média, de acordo com o resultado do teste de Tukey;
+
+\ 
+
+####Vamos fuçar um pouco na tal normalidade dos resíduos?
+
+Apesar de termos feito o teste de normalidade, podemos desejar fazer uma inspeção visual dos nosso resíduos. Muitos autores, na verdade, defendem que o pressuposto da normalidade seja verificado assim, visualmente.
+
+**Usando um histograma**
+
+Um histograma pode ser usado para isso, apesar de **não** ser o melhor método para esta tarefa (veremos a maneira mais adequada a seguir, certo?). Mesmo assim, vamos ver como seria:
+
+```{r}
+x<-scale(resultado$residuals)
+
+hist(x, col="gray", main=NULL,
+xlab="Resíduos", ylab="Frequências", las=1, freq=F,
+ylim=c(0, 0.4))
+
+curve(dnorm(x), col="red", lty=2, lwd=2, add=T)
+```
+
+Bonitinho, né? Vamos lá, detalhando algumas coisas que fizemos:
+
+- a função `scale` foi usada para padronizar os dados dos resíduos, essencial para usarmos a curva sobreposta ao gráfico;
+- o argumento`freq=F` também é usado para permitir o uso da curva, e ele muda o eixo y para proporções, e não frequências;
+- a função `curve` adiciona a curva ao histograma; 
+- o argumento `add=T` garante que a curva vai ser adicionada sem apagar o histogram;
+- o argumento `dnorm` cria o que seria esperado pela distribuição normal;
+
+**Usando um "quantile-quantile plot**
+
+O método mais adequado para se avaliar normalidade dos resíduos visualmente é criar o "quantile-quantile plot", que veremos abaixo. A interpretação é bem tranquila: quanto mais os pontos estiverem seguindo a linha tracejada, mais eles se aproximam do que deveria ser esperado por uma distribuição normal.
+
+Vejamos como fazer:
+
+```{r}
+qqnorm(resultado$residuals)
+qqline(resultado$residuals, lty=2)
+```
+
+Resumindo o que fizemos:
+
+- a função `qqnorm` cria o plt, mas sem a linha tracejada;
+- a função `qqline` adiciona a linha tracejada no plot;
+
+
+\ 
+
+*****
+
+####Ei, você disse que ia me ensinar o Kruskal-Wallis!
+
+Ah é, já ia me esquecendo! :O
+
+Em algumas situações, temos problemas de normalidade com os resíduos da ANOVA. Existem diversas saídas para se lidar com isso, e uma delas é o uso de um teste não paramétrico. O teste deste tipo que pode substitur a ANOVA é o Kruskal-Wallis.
+
+No caso dos dados que estamos estudando, não há a menor necessidade de utilizá-lo. Mas vamos fazer isso assim mesmo só para ilustrar rapidamente os comandos necessários, ok?
+
+O teste em si é super simples de ser executado:
+
+```{r}
+kruskal.test(pragas~cultivo)
+```
+
+E pronto, aí está o resultado.
+
+Caso você esteja utilizando este teste justamente por conta de problemas de normalidade, pode ser legal representar seus resultados não com um gráfico de médias, e sim com um boxplot, que irá nos revelar um pouco mais sobre a estrutura dos dados:
+
+```{r}
+boxplot(pragas~cultivo)
+```
+
+Só pela curiosidade, você pode comparar a visualização do boxplot com a do gráfico de médias. Aí a gente aproveita e aprende um argumentinho novo para ser usado dentro do `par`:
+
+```{r}
+par(mfrow=c(1,2))
+lineplot.CI(cultivo, pragas, type="p")
+boxplot(pragas~cultivo)
+
+```
+
+- o argumento `mfrow` determina que a janela de dados seja dividida em (linhas, colunas);
+
+Ah, e se por acaso você precisar de um teste a posteriori para o Kruskal, há um disponível no pacote `pgirmess`. É um pacote grande e com várias dependências, então tem que ter paciência para baixar, ok? Aqui está o comando:
+
+```{r}
+library(pgirmess)
+kruskalmc(pragas~cultivo)
+```
+
+\ 
+
+**E por hoje é só, espero que você tenha se divertido!  ;)**

@@ -1,0 +1,118 @@
+## Curso de R no IPÊ
+### Script do dia 4.3: Mantel
+*Marcos V. C. Vital e participantes da turma de 2014*
+
+Para mais material, acesse <http://marcosvital.wordpress.com/>
+\
+\ 
+
+Este documento é a 3a e última parte do quarto de uma série que nasceu durante as atividades do "Curso de introdução ao uso do software R e suas aplicações estatísticas nas ciências biológicas", realizado no IPÊ em dezembro de 2014.  
+
+Nesta parte do guia  nós vamos realizar um teste de Mantel, um teste de Mantel parcial e calcular um correlograma.
+
+Como sempre, todo o documento foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+\
+\ 
+
+**Antes de começar, carregue os dados necessários:**
+
+Mentira, desta vez vamos usar dados que já estão disponíveis no R, que tal?
+
+```{r}
+library(vegan)
+
+data(mite)
+data(mite.env)
+data(mite.xy)
+```
+
+A função `data` carrega pacotes que fazem parte dos exemplos do R.
+
+\ 
+
+*****
+
+####O teste de Mantel
+
+Sua execução é bem simples no R, basta usar a função `mantel`, então vejamos um exemplo:
+
+```{r}
+
+dist.amb<-dist(scale(mite.env[,1:2]), method="euclid")
+dist.jac<-vegdist(mite, method="jac", binary=T)
+
+mantel(dist.amb, dist.jac)
+
+```
+
+O gráfico a seguir pode ser útil para se pensar no resultado:
+
+```{r}
+plot(dist.amb, dist.jac, pch=20)
+```
+
+\ 
+
+####O teste de Mantel Parcial
+
+Também não há complicações aqui, basta usar a função `mantel.partial`:
+
+```{r}
+dist.geo<-dist(mite.xy, method="euclid")
+
+mantel.partial(dist.amb, dist.jac, dist.geo)
+```
+
+\ 
+
+####E o correlograma de mantel
+
+De novo, nada de complicado, basta usar a função `mantel.correlog` (mas você pode querer explorar mais a função para determinar as classes de distância manualmente, por exemplo).
+
+Segue um exemplo rápido de execução:
+
+```{r}
+
+correlograma<-mantel.correlog(dist.amb, dist.geo)
+
+correlograma
+
+plot(correlograma)
+
+```
+
+\ 
+
+####Extra! Índices de diversidade de brinde!
+
+Como em sala acabamos falando um pouco sobre os índices e os perfis de diversidade, seguem aqui os procedimentos que realizamos.
+
+**Calculando o índice de Shannon:**
+
+```{r}
+diversity(colSums(mite), index="shannon")
+```
+
+**Calculando o índice de Simpson:**
+
+```{r}
+diversity(colSums(mite), index="simpson")
+```
+
+**Deixando os índices pra lá, e calculando um perfil de diversidade:**
+
+```{r}
+plot(renyi(colSums(mite), hill=T), type="b")
+```
+
+\ 
+
+**E é isso aí! Conseguimos avançar quatro dias.**
+
+**Agora nos vemos nos documentos do último dia!**

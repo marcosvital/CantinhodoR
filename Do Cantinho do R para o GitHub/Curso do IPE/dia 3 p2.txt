@@ -1,0 +1,213 @@
+## Curso de R no IPÊ
+### Script do dia 3.2: Regressão
+*Marcos V. C. Vital e participantes da turma de 2014*
+
+Para mais material, acesse <http://marcosvital.wordpress.com/>
+\
+\ 
+
+Este documento é a segunda parte do terceiro de uma série que nasceu durante as atividades do "Curso de introdução ao uso do software R e suas aplicações estatísticas nas ciências biológicas", realizado no IPÊ em dezembro de 2014.  
+
+Nesta parte do guia  nós vamos realizar uma análise de regressão linear simples, e fuçar um bocado em possibilidades de como lidar com seus resultados.
+
+Como sempre, todo o documento foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+\
+\ 
+
+**Antes de começar, carregue os dados necessários:**
+```{r}
+setwd("C:/R/Curso IPÊ")
+dados<-read.table("latitude.txt", h=T)
+attach(dados)
+
+summary(dados)
+```
+
+\ 
+
+*****
+
+####A regressão linear simples
+
+Vamos bem direto ao ponto, realizar a análise e fazer o gráfico, e deixaremos os pressupostos para depois. Não é o protocolo normal da coisa, mas vamos fazer isso apenas para gerarmos um exemplo rápido.
+
+Lá vai:
+
+```{r}
+resultado<-lm(Riqueza~Latitude)
+
+summary(resultado)
+
+plot(Riqueza~Latitude, pch=16)
+abline(resultado, col="red", lty=2)
+```
+
+Fica bem claro que a relação não é linear, não é?
+
+**Então vamos aos pressupostos!**
+
+Beleza, estamos falando de um modelo linear, então a história é mais ou menos a mesma. A diferença daqui para a anova é que não temos grupos para se calcular variâncias, então vamos avaliar um pressuposto da homocedasticidade dos resíduos (que é bem parecido com o de homogeneidade de variâncias).
+
+Vamos começar por este pressuposto novo, então, que devemos avaliar por um diagnóstico visual:
+
+```{r}
+plot(resultado$fitted, resultado$residuals,
+abline(h=0,lty=2))
+```
+
+Ficou horrendo! :P
+
+Os resíduos com certeza não são homocedásticos.
+
+Vamos conferir a normalidade dos resíduos também:
+
+```{r}
+qqnorm(resultado$residuals)
+qqline(resultado$residuals, lty=2)
+
+```
+
+Também não está nada bom.
+
+O nosso modelo, então, viola os pressupostos. E agora, o que fazer?
+
+\ 
+
+####Um teste não paramétrico?
+
+Podemos calcular uma simples correlação de spearman, que é uma métrica não paramétrica de correlação, baseada em ranks. Ela não é la muito informativa, mas pelo menos nos dá um resultado estatisticamente confiável:
+
+```{r}
+cor(Latitude, Riqueza, method="spearman")
+
+#Fazendo o teste de significância da correlação:
+
+cor.test(Latitude, Riqueza, method="spearman")
+```
+
+O resultado indicou o que podemos ver no gráfico: há uma forte correlação negativa entre as duas variáveis.
+
+Mas com este método não podemos avançar muito... Então vamos brincar um pouco com algumas possibilidades, ok? Boa parte dos procedimentos a seguir serão feitos mais para ilustrar funcionaliades do R do que para indicar como os dados deveriam ser analisados de verdade. Então não leve a coisa à sério demais, e use o exemplo para explorar as capacidades do R.
+
+\ 
+
+####Tentativa 1: vamos tentar tirar um ponto com carinha de outlier:
+
+Vamos identificar os pontos no nosso gráfico:
+
+```{r}
+plot(Riqueza~Latitude, pch=16, type="n")
+text(x=Latitude, y=Riqueza, cex=0.7)
+```
+
+É, aquele ponto 25 está meio fora dos padrões, não é?
+
+Digamos, então, que você decida que ele pode ser retirado da análise. Imagine, por exemplo, que você descobriu que aquele na verdade é um ponto totalmente atípico, com uma riqueza de espécies muito mais alta do que outros na mesma latitude. Podemos removê-lo da análise e ver se as coisas melhoram no nosso modelo.
+
+Será? Vamos ver:
+
+```{r}
+resultado2<-lm(Riqueza[Riqueza<30]~Latitude[Riqueza<30])
+plot(Riqueza[Riqueza<30]~Latitude[Riqueza<30])
+abline(resultado2, lty=2, col="red")
+```
+
+A carinha do modelo em si ficou melhor. Mas será que isso ajudou com os pressupostos? Vamos ver:
+
+```{r}
+plot(resultado2$fitted, resultado2$residuals,
+abline(h=0,lty=2))
+```
+
+Nope. Continua bem ruinzinho.
+
+\ 
+
+####Tentativa 2: transformação dos dados:
+
+Uma outra possibilidade é transformar os dados e ver no que dá. Vamos tentar uma transformação por logarítmo:
+
+```{r}
+resultado3<-lm(log10(Riqueza)~Latitude)
+plot(log10(Riqueza)~Latitude)
+abline(resultado3, lty=2, col="red")
+```
+
+Hum, a carinha do modelo melhorou bastante! Mas vamos ver como estão os nosso amigos resíduos:
+
+```{r}
+plot(resultado3$fitted, resultado3$residuals,
+abline(h=0,lty=2))
+```
+
+Eca, continua ruim, apesar de podermos ver uma ligeira (beeem ligeira) melhora.
+
+\ 
+
+####Tentativa 3: quebrando a regressão.
+
+Olhando os dados, podemos imaginar, com alguma facilidade, que existem dois padrões: um para as latitudes mais ou menos de 20 para baixo, e outro para as latitudes mais ou menos de 30 para cima.
+
+Será que existe uma espécie de "quebra" no efeito da latitude sobre a riqueza de espécies?
+
+Estamos dando um chute bem grande, mas vamos tentar só pelo aprendizado:
+
+```{r}
+
+resultado4.1<-lm(Riqueza[Latitude<24]~Latitude[Latitude<24])
+resultado4.2<-lm(Riqueza[Latitude>28]~Latitude[Latitude>28])
+
+plot(Riqueza[Latitude<24]~Latitude[Latitude<24], col="blue",
+xlim=c(5, 65), ylim=c(0, 35), pch=16)
+
+points(Riqueza[Latitude>28]~Latitude[Latitude>28],
+pch=16, col="red")
+
+abline(resultado4.1, lty=2, col="blue")
+abline(resultado4.2, lty=2, col="red")
+
+```
+
+Que ficou bontinho, ficou. Mas será que os resíduos prestam? Desta vez são dois modelos, ok?
+
+```{r}
+par(mfrow=c(1,2))
+
+plot(resultado4.1$fitted, resultado4.1$residuals,
+abline(h=0,lty=2))
+
+plot(resultado4.2$fitted, resultado4.2$residuals,
+abline(h=0,lty=2))
+
+```
+
+Os resíduos do segundo modelo até que não ficaram horríveis, mas no primeiro a coisa continua feia...
+
+\ 
+
+####Tentativa rápida e tosquinha de ajustar um modelo não linear
+
+Modelos lineares não são a minha praia, mas vamos olhar para um só para ilustrar, certo?
+
+Lá vai:
+
+```{r}
+resultado.nl<-lm(Riqueza~Latitude+I(Latitude^2))
+
+summary(resultado.nl)
+
+plot(Riqueza~Latitude, pch=16)
+curve(29.53749-1.23448*x+0.01385*x^2, add=T, col="red")
+```
+
+Não ficou legal... :(
+
+\ 
+
+**E terminaos mais um. Nos vemos no próximo!**

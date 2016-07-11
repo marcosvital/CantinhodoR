@@ -1,0 +1,154 @@
+## Curso de R no IPÊ
+### Script do dia 5.2: regressão múltipla
+*Marcos V. C. Vital e participantes da turma de 2014*
+
+Para mais material, acesse <http://marcosvital.wordpress.com/>
+\
+\ 
+
+Este documento é a 2a parte do quinto (e último!) de uma série que nasceu durante as atividades do "Curso de introdução ao uso do software R e suas aplicações estatísticas nas ciências biológicas", realizado no IPÊ em dezembro de 2014.  
+
+Nesta parte do guia  nós vamos realizar uma regressão múltipla. No caminho, vamos ver um jeito bacana de visualizar a correlação entre variáveis.
+
+Como sempre, todo o documento foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+\
+\ 
+
+**Antes de começar, carregue os dados e os pacotes necessários:**
+
+
+```{r}
+setwd("C:/R/Curso IPÊ")
+
+dados<-read.table("DensPraga.txt", h=T)
+attach(dados)
+
+summary(dados)
+```
+
+
+\ 
+
+*****
+
+####Explorando a correlação entre as variáveis
+
+Uma coisa fundamental em uma regressão múltipla é utilizar variáveis explicativas que não estejam correlaciomnadas entre si. Podemos avaliar se isto acontece com nossos dados calculando um coeficiente de correlação entre as variáveis de nosso interesse.
+
+Calculando uma matriz de correlação de spearman:
+
+```{r}
+cor(dados[2:6])
+```
+
+Simples e prático, basta interpretar os valores.
+
+Mas como sou chato, quero algo que me permita olhar para as correlações ao mesmo tempo que vejo em gráficos como os dados se relacionam.
+
+O nosso ponto de partida é a função `pairs`:
+
+```{r}
+pairs(dados[2:6])
+```
+
+Que já é bem legal, mas pode ser melhor aproveitada. Que tal colocar coisas úteis na diagonal principal e no painel superior?
+
+Nós vamos copiar e colar um trecho do exemplo do help da função, fazer uma modificação bem pequena, e executar. Se não quiser mexer com isso diretamente, basta executar o código abaixo:
+
+```{r}
+panel.hist <- function(x, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(usr[1:2], 0, 1.5) )
+    h <- hist(x, plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "cyan", ...)
+}
+
+
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = 1)
+}
+
+```
+
+Beleza, agora podemos re-escrever nossa função, e criar um gráfico bem útil para se explorar os padrões de correlação entre as variáveis (com um histograma de cada uma de brinde no meio!).
+
+Vamos lá:
+
+```{r}
+pairs(dados[2:6], 
+diag.panel=panel.hist, upper.panel=panel.cor)
+
+```
+
+Vejamos:
+
+- o argumento `diag.panel` define o que vai aparecer na diagonal principal da matriz de gráficos;
+- o argumento `upper.panel` define o que aparece no painel superior;
+- `panel.hist` e `panel.cor` foram definidos naquele blocão de código logo acima.
+
+Ficou bonito, né? Agora vamos seguir e realizar a nossa regressão. O importante aqui é que agora sabemos que algumas das variáveis estão correlacionadas, e podemos escolher quais variáveis entram e quais não entram no nosso modelo estatístico.
+
+\ 
+
+####Fazendo a regressão múltipla
+
+É facinho! Se você já fez uma regressão múltipla, verá que não tem nada demais aqui:
+
+```{r}
+
+modelo<-lm(Dens_Praga~Altitude+Pluviosidade+Mata)
+```
+
+Vamos dar uma olhada nos pressupostos?
+
+```{r}
+par(mfrow=c(1,2))
+
+#Homocedasticidade:
+plot(modelo$fitted, modelo$residuals,
+abline(h=0,lty=2))
+
+#Normalidade:
+qqnorm(modelo$residuals)
+qqline(modelo$residuals, lty=2)
+
+```
+
+Não está fantástico, mas considero como aceitável.
+
+Então vamos ver o resultado do modelo:
+
+```{r}
+summary(modelo)
+```
+
+Beleza! A interpretação não tem mistério, é similar a de uma regressão simples.
+
+Se quisermos, podemos fazer os gráficos para enxergar melhor o efeito das variáveis que fora estatisticamente significantes:
+
+```{r}
+par(mfrow=c(1,2))
+
+plot(Dens_Praga~Altitude)
+plot(Dens_Praga~Mata)
+```
+
+\ 
+
+**Beleza, pessoal, estamos quase terminando, e o próximo é o último da nossa compilação do curso.**

@@ -1,0 +1,233 @@
+## Curso de R no IPÊ
+### Script do dia 2
+*Marcos V. C. Vital e participantes da turma de 2014*
+
+Para mais material, acesse <http://marcosvital.wordpress.com/>
+\
+\ 
+
+Este documento é o segundo de uma série que nasceu durante as atividades do "Curso de introdução ao uso do software R e suas aplicações estatísticas nas ciências biológicas", realizado no IPÊ em dezembro de 2014.  
+
+Neste segundo guia nós vamos calcular algumas estatísticas descritivas, criar alguns gráficos básicos e realizar um teste T.
+
+Todo o documento foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+\
+\ 
+
+**Antes de começar, carregue os dados necessários:**
+```{r}
+setwd("C:/R/Curso IPÊ")
+dados<-read.table("pratica1.txt", h=T)
+attach(dados)
+```
+\
+\ 
+
+####Um pouquinho de estatística descritiva
+
+Como era de se esperar, o R é capaz de calcular um monte de medidas comumente usadas na estatística, como média, desvio padrão, mediana e coisas do tipo. Então vamos ver rapidamente alguns exemplos. Vá executando cada um deles e observando o resultado:
+
+
+```
+mean(Riqueza)  	#Média
+var(Riqueza)		#Variância
+sd(Riqueza)			#Desvio padrão
+
+median(Riqueza)	#Mediana
+
+quantile(Riqueza)						#Percentis
+quantile(Riqueza, 0.9)					#Apenas o percentil 90
+quantile(Riqueza, c(0.1, 0.5, 0.9)) 	#Percentis 10, 50 e 90
+
+#Podemos fazer cálculos com condições:
+mean(Área[Ambiente=="primário"])		#Média da área para amb. primários
+
+#E podemos combinar condições diferentes, como nos dois exemplos a seguir:
+
+sd(Riqueza[Ambiente=="primário" & Abund_sp1>0])
+#Desvio padrão da riqueza para ambientes primários e que possuam indivíduos da espécie 1.
+
+var(Abund_sp1[Abund_sp1=!0])
+#Variância da abund_sp1, quando seus valores são diferentes de zero ("=!" é o símbolo de "diferente")
+
+```
+Resumindo:
+
+- `mean()` calcula média
+- `var()` calcula variância
+- `sd()` calcula desvio padrão
+- `median()` calcula mediana
+- `quantile()` calcula mediana, quartis e percentis
+
+\ 
+
+**Usando tapply**
+
+A função `tapply()` é uma mão na roda! Ela serve para calcularmos um valor usando uma variável categórica como condição. É bem simples de usar e de se entender, veja:
+
+```{r}
+tapply(Abund_sp1, Ambiente, quantile)
+```
+
+Agora tente com outros exemplos, como:
+
+```
+tapply(Riqueza, Ambiente, mean)
+tapply(Riqueza, Ambiente, sd)
+```
+
+\
+\ 
+
+####Vamos fazer alguns gráficos?
+
+Agora vamos explorar algumas funcionalidades gráficas no R. O R é um software super flexível para se construir gráficos, e ele oferece opções que nos permite mexer em cada detalhe que desejarmos. Claro, isto vem com um custo: cada detalhe a ser alterado no gráfico normalmente é um novo argumento no comando que foi usado para gerá-lo.
+Duas coisas são importantes para fazermos bons gráficos no R: construir aos poucos, adicionando cada argumento e verificando se está funcionando; e usar muitos exemplos como referência, pois é mais fácil aprender com eles do que tentar consruir tudo "na marra".
+
+Então vamos começar!
+
+**Criando histogramas simples**
+
+Os histogramas são criados pela função `hist()`, e podem ser feitos bem rapidamente se você não se preocupar com detalhes do gráfico:
+
+```{r}
+hist(Riqueza)
+```
+
+Mas é claro que você pode querer ir além, então vamos mexer um pouco em alguns dos elementos deste gráfico:
+
+```{r}
+hist(Riqueza, main=NULL, ylab="Frequência", las=1, col="gray")
+```
+
+Aqui usamos alguns argumentos que alteraram a aparência do histograma:
+
+- `main` define o título do gráfico;
+- `ylab` define o nome do eixo y;
+- `las` define a orientação dos números (se fica deitados ou em pé);
+- `col` altera as cores do gráfico;
+
+\ 
+
+**Agora vamos fazer gráficos de dispersão!**
+
+O básico seria:
+
+```{r}
+plot(Riqueza~Área)
+```
+
+Note que usamos um "~" para denotar a relação entre as variáveis. Funciona sempre no formato: `Variável resposta~variável exxplicativa`.
+
+De novo, vamos complicar um pouco e alterar elementos do gráfico com alguns argumentos:
+
+```{r}
+plot(Riqueza~Área, las=1, pch=16, cex=0.8,
+cex.axis=1.3, cex.lab=1.3)
+```
+
+Aqui usamos mais alguns argumentos:
+
+- `pch` define o tipo de símbolo usado (Você pode chamar `?pch` para ver uma lista de símbolos);
+- `cex` altera o tamanho dos símbolos;
+- `cex.axis` e `cex.lab` alteram, respectivamente, os tamanhos dos números dos eixos e dos seus nomes;
+
+Agora vamos complicar um pouco as coisas, e criar um gráfico de dispersão que inclua a categoria dos dados de acordo com uma variável categórica.
+
+Ele pode ser feito de uma maneira bem rápida e grosseira com o seguinte comando:
+
+```{r}
+plot(Riqueza~Área, las=1, pch=16, col=Ambiente)
+```
+
+Mas ele tem uma deficiência grande: as cores foram atribuídas automaticamente... Então vamos tentar de um jeito diferente, ok?
+
+A proposta aqui é fazer o gráfico em duas etapas: primeiro vamos plotar parte dos dados, usando uma primeira categoria da nossa escolha, e depois vamos adicionar a segunda. Com isso, vamos ver um bocado de funções e argumentos novos! Vamos lá:
+
+```{r}
+
+plot(Riqueza[Ambiente=="primário"]~Área[Ambiente=="primário"],
+las=1, pch=16, col="blue", xlim=c(40, 170),
+ylab="Riqueza de espécies", xlab="Área do fragmento")
+
+points(Riqueza[Ambiente=="secundário"]~Área[Ambiente=="secundário"],
+pch=16, col="red")
+
+legend("topleft", legend=levels(Ambiente), pch=16, col=c("blue", "red"))
+
+```
+
+Tome algum tempo para tentar digerir e entender todo o processo e argumentos utilizados. Algumas explicações rápidas:
+
+- `xlim` serviu para delimitar o intervalo usado no eixo x;
+- a função `points` serviu para adicionarmos pontos em um gráfico já aberto;
+- a função `legend` serviu para adicionar a legenda;
+- a função `levels` serviu para chamarmos os nomes das categorias da variável ambiente;
+
+\ 
+
+####Agora, um teste T :)
+
+Para finalizar este script, vamos fazer um teste T. Aqui vamos realizar o teste de maneira bem simples, testando a hipótese de que existe uma diferença na média da riqueza de espécies entre os dois tipos de ambiente.
+
+Mas antes de começar, poode ser legal dar uma conferida nos pressupostos do teste! O teste T presume que: (i) os dados de cada categoria não difere do que seria esperado para uma distribuição normal e (ii) as variâncias são homogêneas.
+
+Existem várias maneiras de se lidar com os pressupostos. Vamos aqui usar uma das mais simples (mas não necessariamente a melhor!): um teste de normalidade e um teste de homogeneidade de variâncias.
+
+**Teste de normalidade**
+
+Vamos usar a função `shapiro.test` para verificar a normalidade. Como precisamos fazer isto para cada categoria da variável Ambiente, vamos usá-la apartir de um `tapply`:
+
+```{r}
+tapply(Riqueza, Ambiente, shapiro.test)
+```
+
+Prontinho!
+
+Pelos resultados, os dados não diferem da distribuição normal, então podemos seguir adiante.
+
+**Teste de homogeneidade de variâncias**
+
+Vamos usar a função `leveneTest`, que faz parte do pacote `car`. É necessário carregar o pacote, e você vai precisar instalá-lo caso não o tenho no seu computador (faça isso pelo menu Pacotes, e use a opção Instalar Pacotes; será preciso uma conexão com a internet).
+
+```{r}
+library(car)  	#Carrega o pacote necessário
+leveneTest(Riqueza~Ambiente)
+```
+
+Tudo beleza de novo, pressuposto atendido. Então vamos fazer o teste T:
+
+```{r}
+t.test(Riqueza~Ambiente, var.equal=T)
+```
+
+E pronto, podemos concluir que existe uma diferença estatisticamente significativa na riqueza de espécies entre os ambientes, com mais espécies nos ambientes de mata primária.
+
+Vamos ver as funções e argumentos vistos até agora:
+
+- `shapiro.test` realiza um teste de normalidade;
+- `leveneTest` realiza um teste de homogeneidade de variâncias;
+- `t.test` realiza o teste T.
+ + No teste T, o argumento `var.equal` define se o teste presume variâncias homogêneas;
+ 
+**Pra terminar, vamos fazer um gráfico!**
+
+Vamos usar uma função do pacote `sciplot` para criar um gráfico que mostra as médias e erros padrões:
+
+```{r}
+library(sciplot)
+
+lineplot.CI(Ambiente, Riqueza, type="p")
+```
+
+Fizemos o gráfico bem grosseirão, mas lembre-se de que ele pode ser editado para ficar mais apresentável.
+
+\ 
+
+**E por hoje é só! ;)**

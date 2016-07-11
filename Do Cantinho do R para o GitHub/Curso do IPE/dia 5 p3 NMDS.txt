@@ -1,0 +1,125 @@
+## Curso de R no IPÊ
+### Script do dia 5.3: NMDS, adonis e envfit
+*Marcos V. C. Vital e participantes da turma de 2014*
+
+Para mais material, acesse <http://marcosvital.wordpress.com/>
+\
+\ 
+
+Este documento é a 3a e última parte do quinto (e último!) de uma série que nasceu durante as atividades do "Curso de introdução ao uso do software R e suas aplicações estatísticas nas ciências biológicas", realizado no IPÊ em dezembro de 2014.  
+
+Nesta última parte do último guia (nãããão, esta acabando...) nós vamos executar um escalonamento multidimensional não métrico (mais conhecido como NMDS), e explorar um pouco os dados relacionados a ele para brincar com as funções adonis e envfit.
+
+Como sempre, todo o documento foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+\
+\ 
+
+**Antes de começar, carregue os dados e os pacotes necessários:**
+
+
+```{r}
+
+setwd("C:/R/Curso IPÊ")
+dados<-read.table("insetos.txt", h=T, row.names=1)
+attach(dados)
+
+str(dados)
+```
+
+
+\ 
+
+*****
+
+####O NMDS
+
+Não tem mistério, basta criar uma matriz de distância com a métrica desejada e utilizá-la dentro da função `metaMDS`:
+
+```{r}
+library(vegan)
+
+matriz.bray<-vegdist(dados[,7:40], method="bray")
+nmds.bray<-metaMDS(matriz.bray)
+```
+
+Podemos plotar de maneira bem direta, mas sem nenhum elemento para interpretar:
+
+```{r}
+plot(nmds.bray)
+```
+
+Mas não tem muita graça. Fica um pouco mais informativo se usarmos os nomes das unidades amostrais:
+
+```{r}
+plot(nmds.bray, type="t")
+```
+
+- O argumento `type="t"` foi usado para se chamar os nomes.
+
+Também podemos plotar com cores relacionadas à uma variável categórica:
+
+```{r}
+plot(nmds.bray, type="n")
+points(nmds.bray, pch=16, col=Ambiente)
+```
+
+- O argumento `type="n"`foi usado para chamarmos uma janela vazia, e depois adicionar os pontos.
+
+E podemos plotar os pontos e depois criar os polígonos relacionados à uma variável categórica:
+
+```{r}
+plot(nmds.bray, type="n")
+points(nmds.bray, pch=16)
+ordihull(nmds.bray, group=Ambiente, show="Mata_Primária", col="green")
+ordihull(nmds.bray, group=Ambiente, show="Mata_Secundária", col="red")
+```
+
+\ 
+
+####A função adonis
+
+A função `adonis` implementa uma ANOVA realizada com permutações, apropriada para analisarmos uma matriz de distância no lugar de uma variável resposta quantitativa. Podemos aplicá-la aos nossos dados com a mesma matriz de distância que criamos acima, e usando a mesma variável "Ambiente" de sempre:
+
+```{r}
+resultado<-adonis(matriz.bray~Ambiente)
+resultado
+```
+
+\ 
+
+####A função envfit
+
+A função `envfit` busca por relações lineares entre variáveis explanatórias da nossa escolha com os dados da ordenação gerada pelo NMDS. Pode ser bastante útil para se compreender como os padrões observados na ordenação se estruturam.
+
+Sua aplicação é simples:
+
+```{r}
+nmds.env<-envfit(nmds.bray, dados[,3:6])
+nmds.env
+```
+
+E podemos visualizar no gráfico:
+
+```{r}
+plot(nmds.bray, type="n")
+points(nmds.bray, pch=16, col=Ambiente)
+plot(nmds.env)
+```
+
+Se você se interessar por uma função mais complexa, que busca por relações não lineares, dê uma olhada na função `ordisurf`.
+
+\ 
+
+**Pessoal, chegamos ao fim da nossa jornada. :D** 
+
+**Assim como ministrar o curso foi um imenso prazer, gostei bastante de gerar este material, e espero que seja útil para todos vocês.**
+
+**Um grande abraços para todos!**
+
+**Marcos**

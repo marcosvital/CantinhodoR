@@ -1,0 +1,260 @@
+## Curso de R no IPÊ
+### Script do dia 1
+*Marcos V. C. Vital e participantes da turma de 2014*
+
+Para mais material, acesse <http://marcosvital.wordpress.com/>
+\
+\ 
+
+Este documento nasceu durante as atividades do "Curso de introdução ao uso do software R e suas aplicações
+estatísticas nas ciências biológicas", realizado no IPÊ em dezembro de 2014. Ele resume a maior parte das atividades que realizamos durante o curso, e esperamos que seja útil como um guia para se aprender algumas das funcionalidades do R. Neste primeiro guia apresentaremos os fundamentos mais básicos do R, e iremos aprender a importar e realizar algumas manipulações básicas dos dados. Outros guias serão produzidos na medida em que o curso avançar, então dê uma conferida no restante do material!
+
+Todo o documento foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+\
+\ 
+
+####Fundamentos básicos
+
+Vá reproduzindo os comandos de exemplo abaixo, e observe os resultados no R.
+\
+\ 
+
+**O R como calculadora:**
+```
+2+5    		#Soma
+30*7			#Multiplicação
+10/2			#Divisão
+50-90			#Subtração
+10^2			#Potência
+sqrt(4)			#Raiz quadrada
+log(100,10)		#Log na base 10
+```
+Resumindo:
+
+- `+, -, / e *` Fazem as operações básicas
+- `^`é o símbolo de potência
+- `sqrt()` é uma função que calcula raiz quadrada
+- `log()` calcula um logarítmo em uma base da minha escolha
+\
+\ 
+
+**Como criar um objeto:**
+
+```
+objeto<-10  	#Criando
+objeto			#"Chamando" o objeto no R
+
+objeto*10			#Multiplica por 10, mas não salva o resultado
+objeto				#Veja como ele continua igual
+objeto<-objeto*10	#Agora sim, salva o resultado da operação
+objeto				#Agora sim ele salvou a modificação
+```
+\
+\ 
+
+**Usando o sistema de ajuda!**
+
+Quando eu já conheço a função, basta usar: `?função` Por exemplo:
+
+```
+?log
+#ou:
+help(log)  #Que na verdade faz a mesma coisa
+```
+E o que fazer quando não sei o nome da função?!
+```
+??anova
+
+#Quando precisamos buscar termos com mais de uma palavra:
+help.search("linear regression")
+```
+
+E se a busca falhar, vamos para a internet!
+
+
+<http://r-br.2285057.n4.nabble.com/>  
+<http://stackoverflow.com/>  
+<https://stat.ethz.ch/mailman/listinfo/r-sig-ecology>  
+<http://www.r-bloggers.com/>  
+<https://www.coursera.org/>  
+<https://www.coursera.org/course/compdata>  
+<https://class.stanford.edu/>  
+\ 
+
+***
+***
+
+####Importando um conjunto de dados
+
+A importação de um conjunto de dados pode ser feito por vários métodos diferentes no R, e muitas vezes a escolha de um método ou outro depende, no fundo, mais de escolhas pessoais do que das características destes métodos. Aqui nós vamos usar a função `read.table()`.
+
+Os passos fundamentais para a importação são:
+
+1. Determinar o diretório de trabalho com a função `setwd()`
+ + Você pode, se quiser, conferir o conteúdo da pasta com a função `dir()`
+2. Importar o arquivo para um objeto no R com a função `read.table`
+  + Lembre-se de usar o argumento `header=T` se os dados tiverem cabeçalho (e aposto que eles tem!)
+3. Se necessário, use o comando `attach()` para que o R reconheça os nomes das variáveis da sua tabela.
+4. Confira os dados importados. Boas opções são as funções `summary()` e `str()`
+5. Lembre-se de que o `attach()` pode ser revertido com um `detach()` quando você for mudar o conjunto de dados analisados.
+\
+\ 
+
+Vejamos um exemplo:
+```{r}
+setwd("C:/R/Curso IPÊ")
+dir()
+dados<-read.table("pratica1.txt", h=T)
+attach(dados)
+summary(dados)
+```
+\
+\ 
+
+####Selecionando, filtrando, revirando e fuçando os dados de forma geral :)
+O R é um ambiente fantástico para se explorar dados, realizar filtragens e alterações, criar novas variáveis e outras coisas do tipo sem ter que voltar à planilha de dados original e sem ter que fazer um monte de tarefas repetitivas.
+
+Nós vamos, então, brincar um pouco com a planilha de dados importada acima, com o objetivo de ter contato com estas funcionalidades.
+
+\ 
+
+**Acessando partes dos dados**
+
+Uma das coisas que o R permite com facilidade é acessar qualquer "pedaço" da sua planilha de dados. Isto pode ser feito fazendo-se referência às linhas e/ou colunas que compõem a nossa planilha. A estrutura básica da coisa é sempre assim: `dados[linhas, colunas]´.
+
+Veja e reproduza os exemplos a seguir para compreender melhor:
+```
+dados[2,3]     #Segunda linha, terceira coluna
+dados[5,]		#Todos os dados da linha 5
+dados[,3]		#Todos os dados da coluna 3
+
+dados[10:20, 3:5] #Colunas 3 a 5, linhas 10 a 20
+
+dados[, c(3,5)] #Apenas colunas 3 e 5, sem a coluna 4
+
+```
+
+\ 
+
+**Filtrando e selecionando dados de acordo com uma ou mais variáveis**
+
+O R permite que os dados sejam manipulados a partir de condições criadas pelas próprias variáveis. Veja e execute alguns dos exemplos a seguir para compreender como funciona:
+
+```
+#Vendo os dados de riqueza apenas para as unidades amostrais de ambiente primário:
+Riqueza[Ambiente=="primário"]
+
+#Vendo os dados de riqueza apenas paras as unidades com área maior ou igual a 120:
+Riqueza[Área>=120]    #Riqueza quando a área é maior ou igual a 120
+
+#Combinando duas condições com o símbolo "&"
+#Neste caso estamos vendo os dados de riqueza para ambientes secundários e que possuem
+#pelo menos um indivíduo da espécie 1 (ou seja, quando Abund_sp1 é maior do que zero):
+Riqueza[Ambiente=="secundário" & Abund_sp1>0] #Combinando condições
+
+#Usando uma ou outra condição; o símbolo "|" significa "ou";
+#Aqui estamos vendo a riqueza nos ambientes secundários ou que possuem área menor do que 100:
+Riqueza[Ambiente=="secundário" | Área<100] #"|" significa "ou"
+
+```
+
+\ 
+
+**Criando novas variáveis e agregando-as aos nosso dados**
+
+No R é bem fácil criar e agregar novas variáveis aos dados sem termos que voltar à planilha original. Na verdade, podemos até mesmo criar uma nova planilha para substituir a anterior com a função `write.table()`!
+
+Vamos começar criando uma nova coluna, na qual vamos inserir os dados de riqueza transformados por logarítmo:
+```{r}
+riq.log<-log10(Riqueza) #Criei um novo objeto
+dados<-cbind(dados, riq.log) #Acrescentei o novo objeto nos dados, como uma nova coluna!
+summary(dados)  #Conferindo se os dados foram atualizados:
+
+
+#Se quiser, eu também posso remover o objeto criado, para evitar que um objeto e uma variável
+#com o mesmo nome fiquem convivendo. Então vamos lá:
+rm(riq.log)  #Removi o objeto criado acima (mas não mexi na coluna nova, ok?)
+detach(dados) #Desfiz o attach() feito la atrás, pois a nossa planilha ganhou uma coluna 
+attach(dados) #Refiz o attach() para que a nova coluna possa então ser reconhecida!
+```
+
+Aqui vimos algumas funções novas, e convém descrevê-las:
+
+- `cbind()` serve para "costurar" novas colunas a um banco de dados, ou combinar bancos de dados lado a lado
+- `rm()` serve par remover objetos da memória do R
+- `detach()` serve para desfazer um `attach()`
+
+\ 
+
+Agora vamos criar mais uma variável. Mas desta vez não será uma simples transformação. Imagine que você deseja classificar os fragmentos em três classes de tamanho (pequenos, médios e grandes), a partir da área total de cada um deles. O seu critério de classificação é: áreas menores do que 90 são pequenas; áreas maiores ou iguais a isso, mas menores do que 120 são grandes; e áreas maiores ou iguais a 120 são grandes.
+
+Vamos lá:
+
+```{r}
+
+área.cat<-ifelse(Área<90,"pequena", ifelse(Área>=120, "grande", "média"))
+
+área.cat
+
+dados<-cbind(dados, área.cat)
+
+summary(dados)
+
+```
+
+Aqui usamos a função `ifelse()`, que executa uma ação a partir de uma condição criada por mim. Note que para obtermos o nosso resultado usamos uma `ifelse()` dentro da outra!
+
+De novo é legal eliminarmos o objeto, já que ele foi incorporado na nossa tabela:
+```{r}
+detach(dados)
+rm(área.cat)
+attach(dados)
+```
+
+E agora, apenas para ilustrar mais funcionalidades úteis do R, imagine que você quer fazer duas coisas: dividir o seu banco de dados em pedaços de acordo com aquela variável categórica que criamos (ou seja, de acordo com as classes de tamanho) e, depois, salvar cada nova tabela em um arquivo. Vamos fazer isto em duas etapas:
+
+1. Dividir os dados com a função `split()`
+ + Esta função vai pedir dois argumentos: os dados a serem divididos e uma variável que sirva de guia para a divisão.
+ + Podemos acessar cada pedaço de duas maneiras diferentes: podemos chamar `dados.divididos$classe` para acessar cada pedaço por seu nome; ou chamar `dados.divididos[[1]]` para acessar pela ordem.
+2. Salvar cada pedaço em um novo arquivo com a função `write.table()`
+ + Nesta também são dois argumentos: o nome do objeto com os dados e o nome do arquivo que será salvo.
+ 
+ Vamos lá:
+ 
+ 
+ 
+```{r}
+
+dados.divididos<-split(dados, área.cat)  #Fazendo a divisão
+
+# E agora Salvando tudo em arquivos separados, manualmente:
+write.table(dados.divididos$pequena, "pequena.txt")
+write.table(dados.divididos$média, "média.txt")
+write.table(dados.divididos$grande, "grande.txt")
+
+
+```
+
+**Como refazer esta última etapa de maneira automática?!**
+
+Ah, sim, você pode estar ~~com preguiça~~ com vontade de ver o verdadeiro potencial do R, e uma boa maneira de fazer isso é tentar automatizar ações que são apenas pequenas variações da mesma coisa. No caso acima, por exemplo, nós escrevemos o comando write.table três vezes, mudando apenas a parte do objeto e o nome do arquivo a serem salvos. Será que eu consigo fazer o R entender o que eu pretendo, e fazer tudo de uma vez sem precisar repetir o comando? Mais do que isso: será que eu consigo criar um comando que faça isso de maneira automática, salvando arquivos a partir de qualquer variável categórica e criando um arquivo por classe?
+
+A resposta é sim! Então vejamos uma maneira de fazer isso. Vamos usar um loop, que é chamado pela função `for()`:
+
+```{r}
+
+for (i in 1:nlevels(área.cat)) {
+  write.table(dados.divididos[[i]], paste(levels(área.cat)[i], ".txt", sep=""))
+}
+
+```
+
+Neste loop, a única coisa que precisa ser substituída caso você utilize outro conjunto de dados é o nome da variável categórica, que no nosso exemplo é area.cat.
+
+Legal, né? :D

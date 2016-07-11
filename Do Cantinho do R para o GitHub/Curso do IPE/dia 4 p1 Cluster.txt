@@ -1,0 +1,233 @@
+## Curso de R no IPÊ
+### Script do dia 4.1: Matrizes e Cluster
+*Marcos V. C. Vital e participantes da turma de 2014*
+
+Para mais material, acesse <http://marcosvital.wordpress.com/>
+\
+\ 
+
+Este documento é a 1a parte do quarto de uma série que nasceu durante as atividades do "Curso de introdução ao uso do software R e suas aplicações estatísticas nas ciências biológicas", realizado no IPÊ em dezembro de 2014.  
+
+Nesta parte do guia  nós vamos criar matrizes de distância e representá-las em dendogramas hierárquicos.
+
+Como sempre, todo o documento foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+\
+\ 
+
+**Antes de começar, carregue os dados necessários:**
+```{r}
+setwd("C:/R/Curso IPÊ")
+dados<-read.table("insetos.txt", h=T, row.names=1)
+attach(dados)
+
+#Aqui um summary vai ser muito carregado, então vou usar um str:
+str(dados)
+```
+
+Notou uma coisa diferente?
+
+Nós usamos o argumento `row.names` para informar o R os nomes das linhas!
+
+\ 
+
+*****
+
+####Passo a passo para criar um cluster:
+
+**Etapa 0: se necessário, padronize os seus dados**
+
+```{r}
+dados.amb<-dados[,3:6] #Separei os dados de interesse
+dados.amb.pad<-scale(dados.amb) #Padronizei os dados
+```
+
+A novidade aqui é a função `scale` que padroniza os dados (subtrai da média e divide pelo desvio padrão).
+
+**Etapa 1: crie sua matriz de distância**
+
+```{r}
+amb.dist<-dist(dados.amb.pad, method="euclid")
+```
+
+Aqui usamos a função `dist`, e escolhemos a distância euclidiana com o argumento `method`
+
+**Etapa 2: crie o seu cluster**
+
+```{r}
+amb.cluster<-hclust(amb.dist, method="average")
+```
+
+Usamos a função `hclust`, e definimos o método de UPGMA pelo argumento `method`
+
+**Etapa 3: calcule o coeficiente de correlação cofenética**
+
+```{r}
+matriz.cof<-cophenetic(amb.cluster)  #Cria a matriz coefenética
+cor(amb.dist, matriz.cof)				#Calcula o coeficiente
+```
+
+Aqui usamos a função `cophenetic` para extrair a matriz cofenética, e a função `cor` para calcular a correlação de pearson.
+
+O coeficiente apresentou um valor adequado, então vamos lá plotar o nosso cluster!
+
+\ 
+
+####Plotando o nosso cluster
+
+Existem diversas maneiras de se plotar um cluster no R. Vamos explorar apenas algumas, ok?
+
+**Rápidão!**
+
+O mais rápido e simples é:
+
+```{r}
+plot(amb.cluster)
+```
+
+Não é la muito bonito, mas quebra galho para uma visualização rápida.
+
+Você pode usar o argumento `hang` para que ele estique os ramos e deixe os nomes lado a lado, assim:
+
+```{r}
+plot(amb.cluster, hang=-1)
+```
+
+
+**De lado**
+
+Você pode colocar o cluster na horizontal convertendo ele em outra categoria de objeto. São duas alternativas: você pode usar a função `as.phylo` do pacote `ape`; ou pode usar a `as.dendrogram`.
+
+Usando a primeira:
+
+```{r}
+library(ape)
+
+plot(as.phylo(amb.cluster))
+```
+
+E a segunda (neste caso precisamos do argumento `horiz` para deixá-lo na horizontal:
+
+```{r}
+plot(as.dendrogram(amb.cluster), horiz=T) #horiz=T faz na horizontal
+```
+
+Mas nos dois casos uma coisa não ficou legal: os nomes ficaram espremidos...
+
+Isto pode ser resolvido de uma maneira simples: aumentando o tamanho da janela do gráfico. Vamos lá:
+
+```{r fig.width=8, fig.height=8}
+windows(width=8, height=8, rescale="fixed")
+plot(as.dendrogram(amb.cluster), horiz=T)
+```
+
+Aqui temos novidades:
+
+- a função `windows` abre uma janela para gráfico com o tamanho que determinarmos;
+- os argumentos `width` e `heigh`determinam a largura e altura da janela, respectivamente;
+- o argumento `rescale="fixed"` faz com que a figura não mude de tamanho quando mexemos na janela;
+
+\ 
+
+**Alterando nomes**
+
+Uma das coisas legais do R é que podemos mexer aqui e ali e encontrar maneiras de solucionar problemas, representar coisas e tudo mais sem ter que voltar atrás, mexer nos dados originais e coisas do tipo.
+
+Imagine, por exemplo, que você queira alterar os nomes das unidades amostrais para identificá-las como sendo pertencentes aos dois tipos de mata descritos na variável ambiente. Como fazer isso sem sair do R?
+
+Vamos lá:
+
+```{r}
+códigos<-ifelse(dados$Ambiente=="Mata_Primária", "MP", "MS")
+novos.nomes<-paste(row.names(dados), códigos, sep="-")
+amb.cluster$labels<-novos.nomes
+
+plot(as.phylo(amb.cluster))
+
+```
+
+O que fizemos aqui?
+
+- `ifelse` você já conhece, e foi usada para criar códigos para serem acrescentados aos nomes;
+- `paste` permite que eu junte nomes, expressões e coisas assim, e foi usada para criarmos os nomes novos;
+- `$labels` foi usado para acessarmos os nomes usados no cluster.
+
+Bacana, né?
+
+**Mas peraí, como você sabia desse esquema do $labels?**
+
+Existe uma função bem básica mas extremamente útil no R, chamada `ls`.
+
+Esta função serve, inicialmente, para listarmos os objetos na memória do R. Por exemplo:
+
+```{r}
+ls()
+```
+
+Mas ela também pode ser usada para listarmos o que está dentro de um objeto, o que pode nos ajudar a entender os seus componentes. No caso do cluster, eu soube que os nomes deveriam estar ali, por olhei para o resultado do `ls`, assim:
+
+```{r}
+ls(amb.cluster)
+```
+
+\ 
+
+####Criando um mapa de calor
+*Este pedacinho só vai funcionar se você tiber o arquivo 'Coldiss.R' que acompanha o livro Numerical Ecology with R.*
+
+Um mapa de calor é uma representação visual da matriz de distância, na qual os números são substituídos por cores em uma escala. O resultado pode ser bastante intuitivo:
+
+```{r}
+source("Coldiss.R")
+
+coldiss(amb.dist)
+```
+
+Aqui nós usamos a função `source` para acessar o arquivo e criar a função `coldiss`
+
+\ 
+
+####Escolhendo outras métricas de distância
+
+Ao fazer o nosso cluster la em cima, trabalhamos com a distância euclidiana. Mas, como vimos, outras métricas podem ser necessárias, dependendo de coisas como a natureza dos meus dados e as minhas perguntas.
+
+Vamos, então, olhar rapidamente para alguns exemplos bem simples, ok? Você irá precisar do pacote `vegan`.
+
+**Coeficiente de Bray-Curtis:**
+
+```{r}
+library(vegan)
+
+dist.bray<-vegdist(dados[,7:40], method="bray")
+cluster.bray<-hclust(dist.bray, method="average")
+plot(cluster.bray, hang=-1)
+```
+
+Aqui usamos a função `vegdist`, que tem um monte de métricas acessíveis pelo argumento `method`;
+
+**Coeficiente de Jaccard:**
+
+```{r}
+dist.jac<-vegdist(dados[,7:40], method="jac", binary=T)
+cluster.jac<-hclust(dist.jac, method="average")
+plot(cluster.jac, hang=-1)
+```
+
+Aqui adicionamos o argumento `binary` para indicar que queremos usar apenas a presença e ausência das espécies.
+
+**Outras métricas?**
+
+O pacote `vegan` possui uma função bem bacana, que permite criar uma métrica desejada. Vale à pena dar uma espiada nela:
+
+```
+?designdist
+```
+
+\ 
+
+**Ufa, terminamos mais um. Ainda temos mais coisas do mesmo dia, então vamos continuar!**

@@ -1,0 +1,206 @@
+## Curso de R no IPÊ
+### Script do dia 5.1: SIG no R!
+*Marcos V. C. Vital e participantes da turma de 2014*
+
+Para mais material, acesse <http://marcosvital.wordpress.com/>
+\
+\ 
+
+Este documento é a 1a parte do quinto (e último!) de uma série que nasceu durante as atividades do "Curso de introdução ao uso do software R e suas aplicações estatísticas nas ciências biológicas", realizado no IPÊ em dezembro de 2014.  
+
+Nesta parte do guia  nós vamos explorar a capacidade do R em fucionar como um Sistema de Informações Geográficas, lendo e manipulando dados que normalmente são explorados em softwares SIGs.
+
+Como sempre, todo o documento foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+\
+\ 
+
+**Antes de começar, carregue os dados e os pacotes necessários:**
+
+
+```{r}
+library(dismo)
+library(maptools)
+
+setwd("C:/R/Curso IPÊ")
+
+dados<-read.csv("bradypus.csv")
+summary(dados)
+
+dados<-dados[,2:3] #Só precisamos das colunas de longitude e latitude
+```
+
+
+\ 
+
+*****
+
+####Lendo shapefiles e criando mapas
+
+Neste exemplo, nós vamos simplesmente usar um shape que já faz parte do pacote `dismo`, então basta chamá-lo pela função `data`. Mas caso você queira importar dados deste tipo, dê uma olhada na função `shapefile`, ok?
+
+```{r}
+data(wrld_simpl) #Carregar o mapa da memória
+```
+
+Para criar um mapa bem simples, é só ir direto no plot:
+
+```{r}
+plot(wrld_simpl)
+```
+
+Agora vamos alterar um pouquinho o jeitão do mapa, fazer um corte e depois incluir os pontos de distribuição das nossas preguiças:
+
+```{r fig.width=6, fig.height=6}
+windows(width=6, height=6, rescale="fixed")
+
+plot(wrld_simpl, xlim=c(-90, -30), ylim=c(-60, 20),
+axes=T, col="gray")
+
+points(dados, pch=16, col="red", cex=0.5)
+```
+
+Perceba uma coisa legal: estamos usando as mesmas funções gráficas de sempre (plot, points, etc)!
+
+**Incluindo informação de outra variável**
+
+Imagine que cada ponto no mapa possua a informação de uma  variável quantitativa qualquer. Nós podemos incluí-la no mapa usando pontos cujo tamanho é proporcional ao valor da variável de interesse! Para isso vamos criar uma variável qualquer, ao acaso, apenas para ver como fica, ok?
+
+```{r}
+abund<-rpois(nrow(dados), 5) #Cria a variável que queremos
+
+
+plot(wrld_simpl, xlim=c(-90, -30), ylim=c(-60, 20),
+axes=T, col="gray")
+
+points(dados, pch=16, col="red", cex=abund/5)
+
+```
+
+Nós usamos o argumento `cex` para determinar os tamanhos dos pontos; dividimos por 5, porque os números estavam gerando bolinhas muito grandes.
+
+Mas tem uma coisa chata: fica difícil, com as bolinhas sobrepostas, saber onde está o centro dela. Então vamos adicionar pontos pequenos:
+
+```{r}
+
+plot(wrld_simpl, xlim=c(-90, -30), ylim=c(-60, 20),
+axes=T, col="gray")
+
+points(dados, pch=16, col="red", cex=abund/5)
+
+points(dados, pch=16, cex=0.1)
+```
+
+Agora sim! :)
+
+\ 
+
+####Extraindo dados de layers
+
+Uma das coisas mais bacanas ao usar dados de informação geográfica no R é que temos uma tremenda capacidade de lidar com os dados "por trás" dos mapas, como em layers com variáveis ambientais, por exemplo. Vamos, então, nos divertir um pouco com isso.
+
+Para facilitar, vamos usar os dados que vêm junto do pacote `dismo`, mas a mesma função pode ser usada para acessar dados no seu computador, ok? Vamos lá:
+
+```{r}
+files<-list.files(path=paste(system.file(package="dismo"),
+"/ex", sep=""), pattern="grd", full.names=T)
+```
+
+Vamos aos detalhes:
+
+- a função `list.files` faz uma lista dos arquivos de uma pasta que atendem um certo critério;
+- o argumento `path` determinar a pasta escolhida (com seus dados, coloque o endereço da pasta no mesmo formato usado na `setwd`);
+- o argumento `pattern` determina o tipo de arquivo que vamos ler (neste caso, gridfiles);
+- o argumento `full.names` serve para vermos o endereço completo da pasta quando chamamos o objeto;
+
+**EScolhendo os layers:**
+
+Agora vamos separar algumas variáveis para trabalharmos. Podemos primeiro listar os arquivos, para saber a numeração de cada um:
+
+```{r}
+files
+```
+
+Depois, basta escolher com quem trabalhar:
+
+```{r}
+clima<-stack(files[1:2])
+
+summary(clima)
+```
+
+Usamos a função `stack` para ler os layers desejados, e escolhemos duas variáveis (temperatura e precipitação). Note que os valores de temperatura estão multiplicados por 10, por issso parecem estranhos.
+
+Podemos ver as variáveis que quisermos em um mapa:
+
+```{r}
+plot(clima$bio1)
+```
+
+**Extraindo os valores:**
+
+Vamos, agora, extrair os valores das duas variáveis ambientais nos nossos layers a partir dos nossos registros de coleta:
+
+```{r}
+clima.pontos<-extract(clima, dados)
+```
+
+Não tem mistério. Usamos a função `extract`, que é bem simples de se usar.
+
+Vamos, então, olhar para os dados ambientais nos registros de coleta. Uma boa maneira de fazer isso é com histogramas:
+
+```{r}
+par(mfrow=c(1,2))
+
+hist(clima.pontos[,1]/10, main="Temperatura média", col="gray")
+hist(clima.pontos[,2], main="Precipitação anual", col="gray")
+```
+
+Claro que também podemos olhar para os números mesmo; assim, por exemplo:
+
+```{r}
+quantile(clima.pontos[,1]/10, c(0, 0.1, 0.25, 0.5, 0.75,0.9, 1))
+quantile(clima.pontos[,2]/10, c(0, 0.1, 0.25, 0.5, 0.75,0.9, 1))
+```
+
+**Criando pontos ao acaso e comparando o clima com os registros**
+
+Vamos criar 500 pontos ao acaso na nossa região de estudo, olharmos para eles rapidamente no mapa e depois extrairmos as mesmas variáveis ambientais para eles também:
+
+```{r}
+pontos.acaso<-randomPoints(clima, 500)
+
+plot(clima$bio1)
+points(pontos.acaso)
+
+clima.acaso<-extract(clima, pontos.acaso)
+```
+
+E vamos agora comparar tudo com um boxplot:
+
+```{r}
+boxplot(clima.pontos[,1]/10, clima.acaso[,1]/10, range=0)
+```
+
+Para terminar, imagine que você queira estudar o padrão de correlação entre duas (ou mais) variáveis ambien tais. É bem simples, você pode criar gráficos de dispersão e calcular valores de correlação. Veja o exemplo:
+
+```{r}
+
+plot(clima.acaso)
+
+#Medindo a correlação:
+cor(clima.acaso, method="spearman")
+
+#Testando a significância da correlação:
+cor.test(clima.acaso[,1],clima.acaso[,2], method="spearman")
+
+```
+
+\ 
+
+**Beleza, agora flata pouco para fecharmos tudo visto no curso!**
