@@ -1,0 +1,314 @@
+## Cantinho do R
+### Números absurdos, escalas distorcidas e personagens favoritos de Game of Thrones
+
+ou
+
+### Usando logaritmo e escala logaritmica para representar dados com grande diferenças
+
+ou ainda
+
+### Valar morghulis
+
+
+*Marcos V. C. Vital*
+
+Para mais material, acesse <http://cantinhodor.wordpress.com/>
+
+\ 
+
+Este documento faz parte do material que disponibilizo no meu blog, o "Cantinho do R", e foi  foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais sobre eles, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+
+\ 
+
+Se Você está olhando este documento e não consegue entender nada, é sinal de que tem que começar do básico com o R. Uma boa pedida é dar uma olhada na minha apostila, para só depois voltar aqui. Confira ela aqui: <https://cantinhodor.wordpress.com/2015/03/28/a-boa-e-velha-apostila-basica-do-r/>
+
+\ 
+
+*********
+
+Oi, pessoal!
+
+De vez em quando, a natureza dos nossos dados dificultam a sua representação de maneira bacana. Veja, por exemplo, um gráfico bem simples que mostra o número de flores deixados por fãs no cemitério virtual de [Game of Thrones](http://www.slate.com/articles/arts/television/2014/04/game_of_thrones_deaths_mourn_dead_characters_at_their_virtual_graveyard.html) (sim, existe um cemitério virtual pra eles, acredita? **Mas não acesse se não quiser spoilers sobre quem morre, beleza?**):
+ 
+```{r echo=FALSE}
+
+dados<-read.table("GoT.txt", h=T, row.names=1)
+row.names(dados)<-gsub('_', ' ', row.names(dados))
+
+par(mar=c(8, 6, 1, 1))
+
+barplot(dados[,1], names.arg=row.names(dados), las=2, ylab="", 
+        xlab="")
+
+mtext("Personagens", side=1, line=6)
+mtext("Número de flores", side=2, line=4)
+
+
+```
+
+(usei apenas os mortos na primeira temporada, para não ficar dando spoilers por aí)
+
+Qual o problema no gráfico, você pergunta? Bom, temos dois problemas centrais:
+
+* O primeiro é o seguinte: como o nosso bom amigo Ned Stark recebeu um quantidade imensa de flores, a escala do gráfico acaba dando ênfase nos números grandes. Isto faz com que seja um pouco difícil entender as diferenças entre as barras que possuem números menores. Tente, por exemplo, entender a diferença de número de flores entre Viserys, Jory e Mycha. Não é muito fácil, né? Dá até pra dizer quem dos três tem mais ou menos, mas dizer qual a diferença é quase impossível.
+
+* O segundo, mas não menos importante, é que quase ninguém colocou flores no túmulo do Syrio Forel! Pô, gente, o Syrio era muito massa! Bora colocar um monte de flores lá, beleza? Até o Viserys, que era todo nojentão, tá com mais flores que ele... :p
+
+Mas vamos lá para o que interessa! Como lidar com este tipo de problema? Consigo pensar em pelo menos três soluções (tá certo que duas são beeeem parecidas), cujo uso depende um pouco de cada situação: colocar os números em cima das barras; transformar os dados por logarítmo; usar uma escala logaritmica. Vamos elaborar um pouco cada uma, certo?
+
+Antes de começar, [baixe o arquivo com os dados aqui](https://dl.dropboxusercontent.com/u/12074355/Cantinho%20do%20R/GoT.txt), e salve na pasta que você vai usar.
+
+\ 
+
+####Colocando números nas barras
+
+\ 
+
+Esta é fácil, e você pode conferir a explicação [neste outro script aqui](https://cantinhodor.wordpress.com/2015/04/24/graficos-no-r-mexendo-em-nomes-dos-eixos-e-algumas-outras-coisinhas/). Vamos carregar os dados e fazer o gráfico:
+
+
+```{r}
+#Não se esqueça de salvar o arquivo de dados e selecionar o diretório de trabalho, ok? ;)
+dados<-read.table("GoT.txt", h=T, row.names=1)
+row.names(dados)<-gsub('_', ' ', row.names(dados))
+
+par(mar=c(8, 6, 1, 1))
+
+gráfico<-barplot(dados[,1], names.arg=row.names(dados), las=2, ylab="", 
+        xlab="", ylim=c(0,300000))
+
+mtext("Personagens", side=1, line=6)
+mtext("Número de flores", side=2, line=4)
+
+text(x=gráfico, y=dados[,1]+10000, dados[,1])
+
+```
+
+Os detalhes sobre o uso de `gsub`, `mtext`, `par` e `text` estão no script mencionado acima, certo? Compare o que fizemos aqui com o que fizemos lá, não tem mistério.
+
+Bom, o problema parece resolvido! Agora, apesar das flores do Ned "puxarem" a escala do eixo y la pra cima, nós podemos entender melhor os demais valores, e compará-los de maneira adequada.
+
+Mas e se toparmos com um caso ainda mais extremo? Ali, no nosso exemplo, apesar das diferenças de valores serem bem grandes, elas não são tão imensas a ponto de distorcer completamente o nosso gráfico. Elas atrapalham um pouco, sim, mas colocar os valores reais já parece resolver o nosso problema. Vamos considerar um problema mais biológico, então, para finalmente olharmos para as outras duas soluções que eu mencionei.
+
+\ 
+
+*****************************
+
+\ 
+
+####Diagramas de Whittaker
+
+Na ecologia, uma maneira bastante interessante de se representar informações sobre uma assembléia de espécies é considerar as suas densidades (ou biomassa, ou qualquer medida de quantidade) em ordem decrescente e representá-las em um gráfico. Este gráfico, bastante comum em trabalhos de Ecologia de Comunidades, é chamado de [diagrama de Whittaker, ou diagrama de rank-abundância (ou alguma variação destes nomes)](https://en.wikipedia.org/wiki/Rank_abundance_curve). Em algum outro momento acho que vou fazer um script só sobre eles, mas se quiser saber mais sobre eles, consulte algum bom livro de Ecologia.
+
+Um típico diagrama desses seria assim:
+
+
+```{r echo=FALSE}
+
+dados<-read.table("http://m.uploadedit.com/ba3e/1435957205747.txt", header=T, row.names=1)
+
+somas<-colSums(dados)
+somas<-sort(somas, decreasing=T)
+
+barplot(somas, las=2, ylim=c(0, 100), ylab="Densidade", xlab="Espécies")
+
+```
+
+É bem simples de inrterpretar, e bastante informativo para um ecólogo que conheça o ambiente e as espécies envolvidas. Ele também pode aparecer em outros formatos (mas que no fim mostram a mesma coisa), como este, por exemplo:
+
+```{r echo=FALSE}
+
+plot(somas, type="b", lty=2, pch=16, ylab="Densidade", xlab="Espécies", las=2, xaxt="n", ylim=c(0,100))
+axis(1, at=c(1:13), labels=names(somas), las=2)
+
+```
+
+Este formato, com linhas e pontos, aliás, é o mais tradicional para este tipo de representação, e ele deve ser o mais frequente de se ver por aí.
+
+Beleza, até aí tudo bem. Mas como isso se relaciona ao tema deste script? O que acontece é que, dependendo dos organismos que você estiver estudando, os números podem ser beeeem discrepantes. E quando falo em discrepantes, falo em algo bem pior do que no nosso gráfico de Game of Thrones! Em estudos com insetos ou com microorganismos, por exemplo, as variações de densidade podem ser absurdas!
+
+Então vamos considerar uma situação dessas para trabalhar, certo? Vamos lá!
+
+Começando com os dados:
+
+```{r}
+
+dados<-read.table("http://m.uploadedit.com/ba3e/1435957205747.txt", header=T, row.names=1)
+
+summary(dados)
+
+```
+
+Beleza, estes são os mesmos dados usados nos dois exemplos que apresentei acima. A planilha tem um formato tradicional: amostras nas linhas e variáveis nas colunas. Neste caso, as densidades das espécies são as nossas variáveis. Dê uma olhada no formato:
+
+```{r}
+head(dados)
+
+```
+
+Para avançarmos, precisamos calcular a densidade total de cada espécie, o que pode ser feito bem facilmente:
+
+```{r}
+somas<-colSums(dados)
+
+somas
+  
+```
+
+Aqui usamos a função `colSums`, que como o próprio nome sugere, calcula a soma de colunas em uma tabela.
+
+Agora vamos colocar em ordem decrescente:
+
+```{r}
+somas<-sort(somas, decreasing=T)
+
+somas
+
+```
+
+Agora usamos `sort` para ordenar, com o argumento `decreasing=T` para fazer isso em ordem decrescente.
+
+Beleza, até aí tudo bem, né? Vamos, então, imaginar uma espécie com uma densidade imensa, que vai avacalhar com a nossa visualização dos dados. Apenas para ilustrar, vamos acrescentar uma nova espécie la na tabela de dados, de forma que você aprende (de bônus!) a adicionar uma coluna nova em um dataframe.
+Vamos lá:
+
+```{r}
+#Primeiro, vamos "criar" a nossa nova espécie:
+sp14<-c(347, 0, 130, 20, 54, 5, 0, 158, 0, 10, 345, 0, 295)
+
+#Agora, vamos adicionar a nova espécie como uma coluna na tabela:
+dados<-cbind(dados, sp14)
+
+
+```
+
+Legal, é? A função `cbind` é uma mão na roda para se adicionar colunas a uma nova tabela. Agora temos que repetir os procedimentos de somar e ordenar, certo? Vamos lá de novo:
+
+```{r}
+somas<-colSums(dados)
+somas<-sort(somas, decreasing=T)
+
+somas
+
+```
+
+Viu ali nossa nova espécie? Sua densidade foi mais que dez vezes maior do que a qualquer uma das outras! E, veja bem, isto não é muito absurdo, de vez em quando nossas dados de verdade fazem isso. Vamos ver como fica no gráfico? Vou ficar com o de barras, acho que ele fica mais legal quando temos poucas espécies como neste exemplo:
+
+```{r}
+
+barplot(somas, las=2, ylim=c(0, 1400), ylab="Densidade", xlab="Espécies")
+
+```
+
+Pois é, agora a distorção foi ainda mais forte, não é verdade?
+
+Uma das funções do diagrama de Wittaker é nos permitir inferir coisas a respeito de uma assembleia de espécies estudando como são as diferenças de abundância entre as espécies. Esta função fica um tanto comprometida no nosso gráfico, pois apesar de podermos ver que uma espécie domina o ambiente, não conseguimos inferir nada de útil sobre as demais.
+
+Colocar os números em cima das barras até ajudaria, mas é uma solução meia boca, pois um gráfico como este tem muito da sua interpretação no formato que enxergamos nas barras (ou linhas, se for o caso). Então, finalmente, vamos olhar para as tais outras duas soluções, aquelas que são bem parecidas.
+
+\ 
+
+**********************************
+
+\ 
+
+####Transformação por logaritmo
+
+Uma solução rápida (e talvez grosseira) para o nosso problema é tacar log nos números! Veja bem, quando calculamos o log de um conjunto de números, nós mantemos a ordem deles (ou seja, quem era maior continua maior, quem era menor continua menor), mas "achatamos" as diferenças. Veja o exemplinho a seguir:
+
+```{r}
+exemplo<-c(1, 10, 100, 1000, 10000)
+
+log10(exemplo)
+```
+
+Viu só? A diferença entre os números ficou pequena, mas a ordem não se perdeu. Se fizermos este mesmo tipo de transformação nos nossos dados, o resultado pode ser bem útil. Vamos lá?
+
+```{r}
+somas.log<-log10(somas)
+
+barplot(somas.log, las=2, ylim=c(0, 3.5), ylab="Densidade (log)", xlab="Espécies")
+
+```
+
+Veja que legal como ficou! Continuamos a ver que a diferença da nossa "sp14" para as demais é enorme, mas agora enxergamos melhor as diferenças entre as demais. Bacana, né? É claro que temos em mente que perdemos alguns informações: os números reais não estão mais no gráfico. Mas peraí, podemos colocá-los em cima das barras! :)
+
+```{r}
+
+gráfico2<-barplot(somas.log, las=2, ylim=c(0, 3.5), ylab="Densidade (log)", xlab="Espécies")
+
+
+text(x=gráfico2, y=somas.log+0.2, somas)
+
+```
+
+Legal, né? Ah, antes que alguém me pergunte: como eu sabia que o "+0.2" daria uma posição legal? Não sabia: foi por tentativa e erro mesmo.
+
+Bacana? Feliz?
+
+Então vamos para a opção parecida, mas um pouco diferente.
+
+\ 
+
+***************************************
+
+\ 
+
+####Gráfico com escala logaritmizada
+
+Uma outra maneira de trabalhar com este problema é mostrar os números reais, mas logaritmizar a escala do eixo y. Desta forma, o gráfico vai sair quase a mesma coisa que o anterior, mas a escala dos números no eixo vai ser outra. olha só como é:
+
+```{r}
+
+gráfico2<-barplot(somas, las=2, ylim=c(1, 5000), ylab="Densidade (log)", xlab="Espécies", log="y")
+
+```
+
+Aqui bastou um novo argumento: `log="y"`, que foi o responsável pela nova escala. Note que eu mexi no `ylim` aqui, para melhorar a visualização do eixo (de novo, os valores ideiais foram encontrados na base da tentativa e erro mesmo).
+
+Bonito, né? Veja que a escala muda de maneira diferente, mas os números são reais, o que pode ser um meio termo bem legal para se mostrar dados assim.
+
+
+\ 
+
+*************************
+
+\ 
+
+Eiiiii, mas vamos fazer mais uma coisa? É que você pode ter ficado pensando em como foi feito aquele gráfico no qual usei os pontos e linhas. Seria uma tremenda maldade colocar o gráfico lá e não fornecer o código, não é? Então vamos para uma última (e breve) parte:
+
+
+####Bônus: diagrama de Whittaker com pontos e linhas
+
+Vamos continuar com os mesmos dados, usando a versão com escala log, beleza? Bora:
+
+```{r}
+
+plot(somas, type="b", lty=2, pch=16, ylab="Densidade", xlab="Espécies", las=2, xaxt="n", ylim=c(1,5000), log="y")
+
+axis(1, at=c(1:14), labels=names(somas), las=2)
+
+
+```
+
+* Usei `type=b` para um gráfico de linhas e pontos, escolhendo linha tracejada com `lty=2` e bolinhas pretas com `pch=16`.
+* Como o eixo x padrão de um gráfico do comando `plot` deve ser numérico, usei o argumento `xaxt="n"` para o R suprimir os valores do eixo x, e depois eu o adicionei com a função `axis`.
+
+\ 
+
+************
+
+\ 
+
+*Bom, pessoal, acho que é isso aí. Espero que tenham curtido mais este script, e aproveitem as dicas para elaborar gráficos que sejam eficientes ao mostrar a informação de maneira "interpretável".*
+
+*E coloquem umas flores pro Syrio, pô!*
+
+*Abraços, e até o próximo script!*
+
+*Prof Marcos*
