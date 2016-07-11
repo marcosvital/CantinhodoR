@@ -1,0 +1,241 @@
+## Cantinho do R
+### Gráficos no R: algumas dicas para uma construção passo a passo
+### E mais: um pouco de informações sobre os bancos de dados do R
+
+Ou, se quiser um título alternativo
+
+### Como o Marcos gosta de fazer gráficos no R
+### E como usar alguns dados no R sem ter que importar
+
+*Marcos V. C. Vital*
+
+Para mais material, acesse <http://cantinhodor.wordpress.com/>
+
+\ 
+
+Este documento faz parte do material que disponibilizo no meu blog, o "Cantinho do R", e foi  foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais sobre eles, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+
+\ 
+
+Se Você está olhando este documento e não consegue entender nada, é sinal de que tem que começar do básico com o R. Uma boa pedida é dar uma olhada na minha apostila, para só depois voltar aqui. Confira ela aqui: <https://cantinhodor.wordpress.com/2015/03/28/a-boa-e-velha-apostila-basica-do-r/>
+
+\ 
+
+*********
+
+Oi, pessoal!
+
+Como eu sempre falo por aí, o R tem uma capacidade impressionante de criação de gráficos, pois permite que você mexa em cada detalhe deles. A contrapartida disso, claro, é que um gráfico com muitos detalhes pode dar um certo trabalhinho para fazer, gerando um script longo e com bastante código.
+
+Neste script quero passar algumas dicas sobre como construir um script de um gráfico no R, sugerindo um *modus operandi* que eu considero bastante útil. Este não será um script cheio de novidades, ok? Apenas vou dar algumas indicações gerais. Mas não se esqueça: são dicas e sugestões pessoais. Se você encontrar uma maneira melhor de fazer, siga em frente, pois no R é sempre possível alcançar o mesmo resultado de trocentas maneiras diferentes.
+
+Ah, e não se esqueça: além dos gráficos básicos (que vamos usar aqui), o R tem pacotes fantásticos dedicados exclusivamente a isso. Há o bom e velho [lattice](http://lattice.r-forge.r-project.org/) e o fenomenal [ggplot2](http://ggplot2.org/). Vale à pena gastar um tempo para aprender a usar esses caras, ok?
+
+\ 
+
+*******************
+
+\ 
+
+####Do que vamos precisar - um pouco sobre os conjuntos de dados no R
+
+Vou usar uma abordagem diferente desta vez. No lugar de fornecer dados em um arquivo ou na internet, que tal trabalharmos com dados que já estão no R? Pois é, você pode nem saber disso ainda, mas cada pacote do R tem um ou mais conjuntos de dados, que podem ser invocados com a função `data`.
+
+Se quiser, o R pode listar para você os conjuntos de dados disponíveis:
+
+```{r}
+data()
+```
+
+Legal, né? O resultado não aparece aqui no nosso markdown porque ele não vai para o console, e sim para uma janela.
+
+Agora, se quer saber sobre todos os dados, incluindo os pacotes que você tem mas que não estão carregados, faça isso:
+
+```{r eval=FALSE}
+data(package = .packages(all.available = TRUE))
+```
+
+Mas atenção: vai demorar um pouquinho pra carregar, e a lista pode ser bem longa se você tiver muitos pacotes, ok?
+
+Finalmente, se você quiser conhecer os conjuntos de dados de um pacote específico, faça assim:
+
+```{r}
+data(package = "vegan")
+```
+
+(Claro, o exemplo acima só vai funcionar se você tiver o pacote vegan no seu computador, ok?)
+
+Ah sim, e uma última informação importante: se quiser, você pode chamar o help de qualquer conjunto de dados desses, que o R vai te dar mais informações a respeito. Olha que bacana:
+
+```{r}
+?InsectSprays
+```
+
+Legal, né?
+
+\ 
+
+*******************
+
+\ 
+
+####Conhecendo o famoso "Iris dataset"
+
+Hein? Famoso?! Pois é, acredita que um conjunto de dados pode ser famoso?
+
+Acontece que um dos pais da estatística (sim, essa mesma que andamos usando por aqui), [Sir Ronald Fisher](https://en.wikipedia.org/wiki/Ronald_Fisher) publicou um estudo em 1936, no qual explorava um pouco como os métodos estatísticos poderiam ser aplicados para se estudar taxonomia. Para apresentar os métodos que queria, Fisher pegou emprestado um conjunto de dados de [Edgar Anderson](https://en.wikipedia.org/wiki/Edgar_Anderson), um botânico, e mais tarde os dados começaram a ser usados amplamente em testes da análise discriminante que o Fisher desenvolveu. Atualmente ele acabou se tornando um conjunto de dados conhecido mesmo, e [tem até página na wikipedia, olha só!](https://en.wikipedia.org/wiki/Iris_flower_data_set)
+
+Enfim, como não poderia deixar de ser, estes dados estão hoje disponíveis para quem quiser usar no R. E o bacana é que ele é um ótimo conjunto de dados para se brincar: dá pra usar como exemplo de um monte de coisas, e se você sair por aí olhando tutoriais do R na internet, invevitavelmente vai topar com um que usa o Iris Dataset.
+
+Bom, você agora já sabe o que precisa sobre os dados, então vamos lá? Carregar é fácil, fácil:
+
+```{r}
+data(iris)
+attach(iris)
+```
+
+E recomendo chamar o help pra ver a explicação sobre as variáveis:
+
+```{r}
+?iris
+```
+
+Pronto. Bora trabalhar com gráficos?
+
+\  
+
+*****
+
+####E aí, como é o seu lance com os gráficos?
+
+Re-aproveitando aquela velha piadinha fraca que nós professores adoramos, o meu modo de trabalhar com gráficos no R é, "como diria o estripador, ir por partes". Você começa com um comando bem básico, que cria o gráfico sem praticamente nenhuma especificação (nomes de eixos, tipos de símbolos, cores e tal), e depois vai adicionando cada modificação desejada uma a uma.
+
+O que tem de legal nisso, você pergunta? Bom, o bacana nisso é que você diminui muito a chance de ter um erro difícil de identificar. O que acontece é que um comando de gráfico no R pode ficar bem longo com muita facilidade, pois cada detalhe modificado é um argumento a mais na função. Aí, se você escreve tudo de uma vez, pode dar tudo errado e você corre o risco de não saber onde o erro está. Sacou?
+
+Ao fazer o gráfico passo a passo, argumento por argumento, você vai perceber imediatamente se algo sair errado. E assim a vida fica bem mais fácil, pois você irá se frustrar menos e aprender mais.
+
+**Então vamos fazer um exemplo disso aí?**
+
+Vamos lá, tendo carregado o nosso Iris Dataset, vamos montar um gráfico assim, passo a passo. Assim demonstro o método que estou sugerindo para lidar com gráficos no R, e de quebra vocês podem aprender alguma coisa legal que não conheciam antes. Vamos?
+
+```{r}
+plot(Petal.Length, Petal.Width)
+
+```
+
+Beleza, graficão básico sem nada demais. Vamos começar mudando a orientação dos números no eixo y, que estão deitados de lado. Basta usar o argumento `las` pra alterar isso, assim:
+
+```{r}
+plot(Petal.Length, Petal.Width, las=1)
+```
+
+Legal, melhorou, né? Este foi o nosso primeiro passo. A proposta é adicionar argumentos um a um, sem atropelo. Caso você erre qualquer coisa em um argumento, vai saber que o erro foi na última modificação que fez.
+
+Vamos mudar o nome do eixo y, com o argumento `ylab`:
+
+```{r}
+plot(Petal.Length, Petal.Width, las=1, ylab="Largura das pétalas")
+```
+
+Não se esqueça que o nome deve ficar entre aspas, ok?
+Repetindo o mesmo, agora com o eixo x, usando `xlab`:
+
+```{r}
+plot(Petal.Length, Petal.Width, las=1, ylab="Largura das pétalas",
+     xlab="Comprimento das pétalas")
+```
+
+Note que desta vez eu continuei o comando na linha abaixo. Você pode fazer isso sempre que quiser, bastando dar um "enter" após uma vírgula, e continuar na linha seguinte. Gosto disso, pois evita que o comando fique muito comprido e difícil de se ver de uma vez.
+
+Agora vou mudar o símbolo do gráfico, usando `pch`:
+
+```{r}
+plot(Petal.Length, Petal.Width, las=1, ylab="Largura das pétalas",
+     xlab="Comprimento das pétalas", pch=16)
+```
+
+Note que eu sempre dou um espaço entre os argumentos, após a vírgula. Ele é opcional, você não precisa incluí-lo no seu comando. Mas gosto de fazer isso sempre, pois torna os comandos mais legíveis.
+
+Agora vamos mudar a cor dos pontos, usando uma cor para cada espécie, usando o argumento `col`:
+
+```{r}
+plot(Petal.Length, Petal.Width, las=1, ylab="Largura das pétalas",
+     xlab="Comprimento das pétalas", pch=16, col=Species)
+```
+
+Legal, né?
+
+Mas, da forma como eu fiz, o R escolheu sozinho as cores. Vamos definir as cores nós mesmos? Vai ser bem melhor.
+
+Primeiro, cheque a ordem das espécies assim:
+
+```{r}
+levels(Species)
+```
+
+Beleza, agora sabemos a ordem. Vamos então escolher as cores pra cada espécie:
+
+```{r}
+cores<-c("red", "green4", "blue")
+```
+
+Peraí, porque você criou um objeto, Marcos? É que eu acho que vai ficar mais fácil de escrever o resto, pois podemos usar este objeto depois de novo, na hora de montarmos nossa legenda. Faz parte do nosso processo de passo a passo.
+
+Vamos colocar as cores no gráfico:
+
+```{r}
+plot(Petal.Length, Petal.Width, las=1, ylab="Largura das pétalas",
+     xlab="Comprimento das pétalas", pch=16, col=cores[Species])
+```
+
+Massa. 
+
+Mas é claro que falta uma legenda, não é? Então vamos usar o mesmo processo, fazer passo a passo para não nos atropelarmos, ok? Vamos começar:
+
+```{r}
+plot(Petal.Length, Petal.Width, las=1, ylab="Largura das pétalas",
+     xlab="Comprimento das pétalas", pch=16, col=cores[Species])
+
+legend("topleft", legend=levels(Species))
+```
+
+Beleza, agora vamos continuar, incluindo os símbolos:
+
+```{r}
+plot(Petal.Length, Petal.Width, las=1, ylab="Largura das pétalas",
+     xlab="Comprimento das pétalas", pch=16, col=cores[Species])
+
+legend("topleft", legend=levels(Species), pch=16)
+```
+
+Pronto, acho que só falta colocar as cores, não é? Vamos:
+
+```{r}
+plot(Petal.Length, Petal.Width, las=1, ylab="Largura das pétalas",
+     xlab="Comprimento das pétalas", pch=16, col=cores[Species])
+
+legend("topleft", legend=levels(Species), pch=16, col=cores)
+```
+
+Aê, ficou bacana, não foi?
+
+Então, sei que não teve muita coisa neste script, mas era isso aí que eu queria passar para vocês. Como um desafio, tente adicionar outros elementos ou modificações neste gráfico que fizemos. E continue a fazer isso por etapas, faz uma grande diferença na hora do aprendizado, ok?
+
+
+\ 
+
+************
+
+\ 
+
+*Bom, pessoal, é isso aí! Espero que as sugestões sejam úteis para vocês*
+
+*Abraços, e até o próximo script!*
+
+*Prof Marcos*

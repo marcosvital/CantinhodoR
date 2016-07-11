@@ -1,0 +1,229 @@
+### Cantinho do R
+#### Mexendo com nomes de eixos e chatices do tipo
+*Marcos V. C. Vital*
+
+Para mais material, acesse <http://cantinhodor.wordpress.com/>
+\
+\ 
+
+Este documento faz parte do material que disponibilizo no meu blog, o "Cantinho do R", e foi  foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais sobre eles, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+
+\
+
+Se Você está olhando este documento e não consegue entender nada, é sinal de que tem que começar do básico com o R. Uma boa pedida é dar uma olhada na minha apostila, para só depois voltar aqui. Confira ela aqui: <https://cantinhodor.wordpress.com/2015/03/28/a-boa-e-velha-apostila-basica-do-r/>
+\
+\ 
+
+*********
+
+Uma das coisas fantásticas no R são os gráficos. Eles podem ser editados de um monte de maneiras, e você consegue mexer em cada pequeno detalhe deles. Mas isso vem com um custo: pode dar trabalho pra c#$#%&*!
+
+Neste documento curtinho vou mostrar alguns dos detalhes de edição de gráficos simples, me concentrando em como ajeitar os nomes dos eixos, o tamanho da fonte, evitar textos sobrepostos e outras pequenas chatices do tipo - que, apesar de chatas, são muito importantes na prática!
+
+Vamos começar gerando um conjunto de dados bem simples. Basta executar, e os dados serão criados direto no seu R, ok?
+
+```{r}
+dados<-structure(list(varx = 5:14, vary = c(12L, 22L, 18L, 25L, 24L, 
+32L, 30L, 38L, 39L, 41L)), .Names = c("varx", "vary"), class = "data.frame", row.names = c(NA, 
+-10L))
+
+attach(dados)
+```
+
+Se quiser saber como criei os dados com este comando: eu já estava com os dados salvos em uma sessão do R, e usei o comando `deput(dados)`. Esta é uma função super útil para se mandar pequenos conjuntos de dados "embutidos" dentro de um script.
+
+\
+
+Um gráficão basicão (incluindo uma regressão, só pra ter mais um "ão"), seria assim:
+
+```{r}
+m1<-lm(vary~varx)
+plot(vary~varx, pch=16, las=1)
+abline(m1, col="red", lty=2)
+```
+
+Beleza, nada demais, são comandos que se você ainda não conhece, precisa começar do básico (aí veja a minha apostila, citada lá no início).
+
+\
+
+Agora vamos fuçar em algumas coisas, pra ir aprendendo a como mexer nelas no R, ok? Uma coisa importante é usar o comando `par()`. Ele serve paara definir parâmetros gráficos, e pode ser usado antes de um gráfico ser feito para definir como serão os parâmetros a serem usados (tipo fonte, tamanho dos números, etc e tal). Perceba que quando você usa um `par`, os parâmetros dele valem para todos os gráficos seguintes, a não ser quando você fecha a janela do gráfico (isto "reseta" os parâmetros).
+
+Bora mudar a fonte? Veja só:
+
+```{r}
+par(family="serif")
+
+#De novo o gráfico:
+plot(vary~varx, pch=16, las=1)
+abline(m1, col="red", lty=2)
+```
+
+Viu a mudança? Pois é, usando o argumento `family` deixei a fonte "igualzin que nem" o Times New Roman que usamos tanto por aí.
+
+Mas aí você pode achar que a fonte tá pequena. Vamos mexer nisso também:
+
+```{r}
+par(family="serif", cex.lab=2, cex.axis=2)
+
+#De novo o gráfico:
+plot(vary~varx, pch=16, las=1)
+abline(m1, col="red", lty=2)
+```
+
+O argumento `cex.axis` mexe no tamanho dos números dos eixos;
+
+O argumento `cex.lab` mexe no tamanho dos nomes dos eixos.
+
+Nos dois casos, os números funcionam como multiplicadores, onde 1 é o valor normal. Vale usar casas decimais, ok? Se quiser, brinque com os valores, pois o melhor é ir "sentindo" mesmo, pra depois decidir como fica melhor.
+
+\
+
+Legal, mas note que tem um probleminha visual: o nome do eixo y ficou ali bem colado com os números, não foi? E podia ser pior: às vezes, quando mexemos nos tamanhos das fontes, podemos ter sobreposição desses elementos.
+
+Uma boa maneira de escapar disso, é mexer nas margens, usando o argumento `mar` do comando `par`.
+
+O `mar` usa quatro valores, e funciona assim:
+
+```{r, echo=FALSE}
+par(mar=c(5,5,5,5), cex.axis=0.1)
+
+plot(vary~varx, pch=16, las=1, xlab="", ylab="")
+mtext("margem 1", side=1, line=3)
+mtext("margem 2", side=2, line=3)
+mtext("margem 3", side=3, line=3)
+mtext("margem 4", side=4, line=3)
+
+```
+
+Para cada margem, você pode atribuir um valor desejado. Quanto maior a margem, maior o espaço para os elementos que aparecem nela.
+
+Vamos mudar de banco de dados, e usar outro exemplo pra brincar melhor com isso, ok? Vamos lá:
+
+```{r}
+detach(dados)
+
+dados<-structure(list(var.nomes = structure(c(1L, 1L, 1L, 1L, 2L, 2L, 
+2L, 3L, 3L, 3L, 3L, 3L, 3L, 4L, 4L, 4L, 5L, 5L, 5L), .Label = c("nome_1", 
+"nome_2", "nome_grande", "nome_grande.2", "nome_muito_grande"
+), class = "factor")), .Names = "var.nomes", class = "data.frame", row.names = c(NA, 
+-19L))
+
+dados.tabela<-table(dados)
+
+dados.tabela
+```
+
+Um gráfico de barras simples com estes dados ficaria assim:
+
+```{r}
+barplot(dados.tabela)
+```
+
+Beleza! Beleza?! Coisa nenhuma, ficou uma bela porcaria! Nem sei por onde começar... :P
+
+Vamos começar alterando a disposição dos nomes no eixo x, ok? Eles não estão completamentre visíveis, pois alguns são grandes e não conseguiram ser inseridos no gráfico por falta de espaço. Isso é simples de resolver, olha:
+
+```{r}
+barplot(dados.tabela, las=3)
+```
+
+É, eu sei, continua horrível. O `las=3` até deixou vermos todos os nomes, mas eles ficam cortados... Ei, peraí, isso é um trabalho para o `mar`! Ó só que legal:
+
+```{r}
+par(mar=c(9,4,1,1))
+
+barplot(dados.tabela, las=3)
+```
+
+Viu que bacana? Cada valor equivale à uma margem (1, 2, 3 e 4, na ordem da figura la em cima). Basta definir os valores e pronto! Normalmente coloco 1 nas margens 3 e 4, que dificilmente são relevantes. Já na 1 e 2, basta ir testando os valores e ver como fica melhor.
+
+Maneiro. Agora vamos mexer mais. Nomes dos eixos é bom, né? Então vamos lá:
+
+```{r}
+par(mar=c(9,4,1,1))
+
+barplot(dados.tabela, las=3, ylab="Frequência de algo?", xlab="Nomes esquisitos que inventei")
+```
+
+Ahhhhhhhhhh!!!!!!
+
+Você não achou que já ia dar certo, né? hehehehe
+
+O que acontece é que os argumentos `xlab` e `ylab` usam posições padronizadas, o que pode ser um problema. Então vamos usar um comando extra, que serve para colocar um nome de eixo onde quisermos. Pra dar certinho, vou aumentar ainda mais a margem, ok? Vamos:
+
+```{r}
+par(mar=c(11,4,1,1))
+
+barplot(dados.tabela, las=3, ylab="Frequência de algo?", xlab="")
+
+mtext("Nomes esquisitos que inventei", side=1, line=10)
+```
+
+Agora preste atenção, ok? Tem detalhes.
+
+Aumentei a margem 1 pra 11. Aí, no comando `mtext`, que escreve texto na margem, eu disse duas coisas: `side=1`, indica que é a margem 1; `line=10`, significa a distância do eixo, na mesma numeração do tamanho da margem. E notem que coloquei o `xlab=""`, pra ter certeza de que o comando gráfico não ia colocar um nome automático lá.
+
+Brinque um pouco com os valores de `line` pra ver o efeito da distância, e mude o valor de `side` para escrever nome em qualquer uma das quatro margens.
+
+Ah, um aviso importante: a função `mtext` adiciona um nome, mas não remove o anterior. Então se você estiver "brincando" com a função, os nomes vão ficar se sobrepondo, a não ser que você feche o gráfico e faça de novo, ok?
+
+******************
+
+#####Bônus: números nas barras e tirando os underlines dos nomes!
+
+Eu meio que terminei aqui, mas aí olhei pro gráfico, ele olhou pra mim, e pensei em duas coisas que são úteis em gráficos de barras como este.
+
+1 - Dependendo da escala do gráfico, colocar um número com os valores em cima das barras é super bacana.
+
+2- E aqueles underlines nos nomes das barras é um saco, mas são comuns no R (o R implica com espaços nos nomes e valores de variáveis, então quase sempre dados assim entram no R com underlines ou pontos no lugar dos espaços).
+
+Podemos aprender a resolver estas duas coisas, então vamos lá!
+
+```{r}
+par(mar=c(11,4,1,1))
+
+gráfico<-barplot(dados.tabela, las=3, ylab="Frequência de algo?", xlab="", ylim=c(0,8))
+
+mtext("Nomes esquisitos que inventei", side=1, line=10)
+
+text(x=gráfico, y=dados.tabela+0.5, dados.tabela)
+```
+
+Notem que alterei o `ylim`, senão não daria para ver os valores em cima da barra que é maior.
+
+Usei o comando `text` pra colocar os valores. Para ele funcionar, salvei o gráfico dentro de um objeto (que chamei com o criativo nome de "gráfico"!), pois usamos este objeto como referência das posições das barras. Usei um valor de 0.5 na posição, o que é fruto de tentativa e erro mesmo. Se a escala do gráfico for com valores muito maiores do que deste exemplo, é provável que você precise usar valores maiores, ok? Tentativa e erro, é só mexer que você descobre. E o último argumento são os valores em si, que serão colocados em cima das barrinhas.
+
+Beleza, falta resolver o negócio dos underlines:
+
+```{r}
+names(dados.tabela)<-gsub('_', ' ', names(dados.tabela))
+```
+
+Pronto, tá resolvido. A função `gsub` substitui coisas, e, neste caso, trocou os underlines por espaços em branco (de quebra, usei a função `names` pra mudar isso direto nos nomes da nossa tabela).
+
+Vamos ver como ficou? Aqui está:
+
+
+```{r}
+par(mar=c(11,4,1,1))
+
+gráfico<-barplot(dados.tabela, las=3, ylab="Frequência de algo?", xlab="", ylim=c(0,8))
+
+mtext("Nomes esquisitos que inventei", side=1, line=10)
+
+text(x=gráfico, y=dados.tabela+0.5, dados.tabela)
+```
+
+Ah, bem mais apresentável, não é verdade?
+
+****************
+
+*Ufa, acho que já está de bom tamanho por hora. Espero que tenha sido proveitoso! Até a próxima!*
+
+*Prof. Marcos*

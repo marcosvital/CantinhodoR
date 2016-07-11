@@ -1,0 +1,161 @@
+## Cantinho do R
+### Sobreposição de gráficos no R: um exemplinho com histogramas
+
+ou, se preferir:
+
+### Como sobrepor dois gráficos no R e evitar que o resultado seja uma grande bagunça!
+
+
+*Marcos V. C. Vital*
+
+Para mais material, acesse <http://cantinhodor.wordpress.com/>
+
+\ 
+
+Este documento faz parte do material que disponibilizo no meu blog, o "Cantinho do R", e foi  foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais sobre eles, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+
+\ 
+
+Se Você está olhando este documento e não consegue entender nada, é sinal de que tem que começar do básico com o R. Uma boa pedida é dar uma olhada na minha apostila, para só depois voltar aqui. Confira ela aqui: <https://cantinhodor.wordpress.com/2015/03/28/a-boa-e-velha-apostila-basica-do-r/>
+
+\ 
+
+*********
+
+Oi, pessoal!
+
+Acho que o título já diz tudo do que se trata este script: ele fala sobre como sobrepor dois histogramas. Mais do que isso, vamos tentar ver de uma forma geral como podemos sobrepor gráficos no R, pois o que veremos aqui serve para diversas outras situações.
+
+Assim como o [script sobre o boxplot de médias](https://cantinhodor.wordpress.com/2015/11/09/um-boxplot-de-medias-e-aprendendo-mais-sobre-graficos-no-r/), este aqui surgiu durante o curso que eu ministrei com o pessoal da [Bocaina Biologia da Conservação](http://biologiadaconservacao.com.br/) e da [ESCAS e IPÊ](http://escas.org.br/).
+
+Não temos muito o que dizer sobre a preparação (nós vamos criar os próprios dados), então vamos deixar de conversa e colocar a mão na massa!
+
+\  
+
+####Criando dados
+
+Para começar, vamos precisar de um conjuntinho de dados. Nós normalmente ou carregamos um conjunto de dados que eu envio junto com o script ou então carregamos dados de dentro do próprio R, [como neste exemplo](https://cantinhodor.wordpress.com/2015/10/18/graficos-no-r-algumas-sugestoes-de-aprendizado/). Então, só pra ser diferente, hoje vamos criar os nossos dados, beleza?
+
+O R tem diversas funções que lidam com distribuições de probabilidades, e que podem ser usadas para criar dados ao acaso, seguindo a distribuição que você escolher. Se estiver curioso, veja aqui:
+
+```{r}
+?Distributions
+```
+
+Legal, né? Tem bastante coisa, e isso é só o que vem no R sem pacotes, com certeza tem mais coisas escondidas se você quiser procurar.
+
+Mas vamos para o que nos interessa. Vou criar dois conjuntinhos de dados ao acaso seguindo a [distribuição normal](https://pt.wikipedia.org/wiki/Distribui%C3%A7%C3%A3o_de_Poisson), ok?
+
+Vamos la:
+
+```{r}
+dados1<-rnorm(100, 5, 1)
+dados2<-rnorm(100, 7, 1)
+```
+
+Pronto, aqui não tem mistério. Usamos a função `rnorm` para criar dois conjuntinho de dados. Se ficar mais curioso, brinque um pouco com a função. Os três parâmetros, na ordem, são: a quantidade de números gerados, a média e o desvio padrão. 
+
+\  
+
+####Primeira olhada
+
+Beleza, vamos lá olhar rapidamente para os histogramas, ok? Podemos fazer um de cada vez, não tem complicação:
+
+```{r}
+#Histograma 1
+
+hist(dados1, main=NULL, col="red")
+```
+
+E o outro:
+
+```{r}
+#Histograma 2
+
+hist(dados2, main=NULL, col="blue")
+```
+
+O primeiro passo para podemos visualizar os dois histogramas juntos é colocá-los na mesma escala nos eixos x e y. Vamos olhar para os dois ao mesmo tempo para facilitar, ok? Lá vai:
+
+```{r}
+par(mfrow=c(2,1))
+hist(dados1, main=NULL, col="red")
+hist(dados2, main=NULL, col="blue")
+
+```
+
+Beleza.
+
+Note que os histogramas vão diferir em sua amplitude de valores de x e podem também apresentar variação nos valores de y (como os dados foram gerados ao acaso, a cada vez que executarmos o script teremos dois histogramas um pouco diferentes). Então é importante ficar atento para estes limites na hora de dar o próximo passo, ok?
+
+
+\  
+
+####Sobrepondo os histogramas
+
+Ótimo, já temos tudo em mãos, e só nos falta de fato sobrepor os dois histogramas. É um processo bem simples, na verdade: basta plotar o primeiro (tendo o cuidado de estabelecer os limites adequados para x e y) e depois usar o argumento `add=T` ao plotar o segundo, e pronto! Fácil, né? Veja só:
+
+```{r}
+#Agora os dois de uma vez:
+
+hist(dados1, main=NULL, col="red", xlim=c(2, 10), ylim=c(0, 30))
+hist(dados2, main=NULL, col="blue", add=T)
+
+```
+
+Aêêê, deu certo, uhu!
+
+Peraí, mais ou menos, né? Com a sobreposição, criamos um problema: o segundo histograma acaba tampando parte do primeiro... :p
+
+Mas é normal, e pode acontecer facilmente em situações assim. Então temos que resolver, né? Bora lá!
+
+\  
+
+####Adicionando transparência
+
+Como é de praxe no R, com certeza podemos encontrar soluções diferentes para o nosso probleminha de sobreposição. Aqui vamos usar um simples e intuitivo: tornar as barras semi-transparentes.
+
+O nosso ponto de partida é o comando anterior, mas vamos chamar um pacote e mudar um pouquinho a maneira de "chamar" as cores:
+
+```{r}
+#É agora que a mágica acontece:
+
+library(scales)
+
+hist(dados1, main=NULL, col=alpha("red", 0.5), xlim=c(2, 10), ylim=c(0, 30))
+hist(dados2, main=NULL, col=alpha("blue", 0.5), add=T)
+
+```
+
+Simples, né? Usamos a função `alpha` do pacote `scales` para definir as cores. A função `alpha` precisa apenas de dois parâmetros: a cor, que pode ser qualquer uma que você já iria usar, e o nível de transparência, em uma escala de 0 a 1. Dá pra brincar com o valor, para ver como fica melhor. Por exemplo:
+
+
+```{r}
+
+library(scales)
+
+hist(dados1, main=NULL, col=alpha("red", 0.8), xlim=c(2, 10), ylim=c(0, 30))
+hist(dados2, main=NULL, col=alpha("blue", 0.8), add=T)
+
+```
+
+E aí é só brincar um pouquinho e encontrar o melhor estilo para o seu gráfico. ;)
+
+
+\ 
+
+************
+
+\ 
+
+*Bom, gente, por hoje é só. Espero que a função alpha possa ser útil para vocês no futuro. Pessoalmente, eu nunca a usei na prática em histogramas, mas ela já me ajudou bastante em gráficos de ordenação com polígonos (como em um NMDS, por exemplo).*
+
+*Abraços, e até o próximo script!*
+
+*Prof Marcos*

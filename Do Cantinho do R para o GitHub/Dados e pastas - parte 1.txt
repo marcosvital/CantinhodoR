@@ -1,0 +1,113 @@
+### Cantinho do R
+#### Dados, pastas e coisas afins no R: algumas dicas e sugestões. Parte 1: diretórios de trabalho
+
+ou, se preferir, o título alternativo é:
+
+#### PQP, o R não consegue ler meus dados direito! Alguém pelamordedeus me ajuda!!!!
+#### (Parte 1: diretórios de trabalho)
+
+
+*Marcos V. C. Vital*
+
+Para mais material, acesse <http://cantinhodor.wordpress.com/>
+\
+\ 
+
+Este documento faz parte do material que disponibilizo no meu blog, o "Cantinho do R", e foi  foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais sobre eles, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+
+\
+
+Se Você está olhando este documento e não consegue entender nada, é sinal de que tem que começar do básico com o R. Uma boa pedida é dar uma olhada na minha apostila, para só depois voltar aqui. Confira ela aqui: <https://cantinhodor.wordpress.com/2015/03/28/a-boa-e-velha-apostila-basica-do-r/>
+\
+\ 
+
+*********
+
+Oi, pessoal!
+
+Uma das grandes dores de cabeça no R para o usuário iniciante é a importação dos dados: mil errinhos podem acontecer na hora de levar os seus dados para o programa, e isso é especialmente frustrante para um usuário iniciante (afinal, se o cara nem consegue importar os dados, como vai aprender a analisar?!). Por causa disso, resolvi escrever um breve script para falar sobre o assunto, dando algumas indicações gerais, mostrando caminhos diferentes e indicando como resolver alguns problemas comuns. Como a coisa começou a ficar grande, decidi dividir em partes. Acho que serão duas, mas depois veremos onde vamos chegar, ok?
+
+Ah, tenha em em mente que devem existir umas 247,3 maneiras diferentes de se importar dados para o R! Existem vários comandos diferentes, e você deveria usar aquele com o qual se sinta mais confortável (se ele funcionar bem, claro). Então não encare as minhas indicações como "a melhor maneira de se importar dados para o R", e sim como "o jeito favorito do prof. Marcos importar dados para o R", beleza?
+
+\
+
+
+************
+
+\
+
+
+##### Começando do começo: diretório de trabalho
+
+*Nesta primeira parte, vamos falar sobre como organizar pastas de trabalho no R, indicando para ele de onde os dados virão e onde ele deve salvar arquivos que criarmos.*
+
+Eu sempre digo para os meus alunos que é fundamental se trabalhar no R usando uma boa organização de diretórios de trabalho. Como funciona isso?
+
+Toda vez que eu peço para o R ler ou salvar um arquivo, ele vai automaticamente tentar fazer isso dentro de uma pasta que ele considera como diretório de trabalho. Se eu não disser nada para ele, informando em qual pasta quero trabalhar, ele decidirá isso sozinho, usando uma pasta padrão (para usuários do Windows, isto sempre será a pasta "Documentos").
+
+Definir por conta própria um diretório de trabalho é sempre muito legal, pois ajuda você a organizar as suas análises em pastas (uma por projeto, por exemplo) e evita um monte de erros (você sempre terá certeza de que o R está abrindo o(s) arquivo(s) correto(s)).
+
+Há pelo menos três maneiras de fazer isso: via menu, via comando com "janelinha de seleção", e via comando com endereço da pasta. Eu prefiro a terceira para as minhas análises, e a segunda para usar durante aulas e para enviar script para outras pessoas. Bora olhar para cada uma delas:
+
+**A primeira: via menu**
+
+Com o R aberto, basta ir no menu "Arquivo", e selecionar a opção "Mudar dir" (ou "Change dir", se estiver em inglês). Aí você escolhe a pasta, e pronto! Legal, né? Se é tão fácil, por que diabos eu não considero esta a melhor maneira?! Sadismo??
+
+Não! A razão é prática: quando você faz algo via menu, isto não aparece no script. Aí, se precisar reproduzir os passos que fez, terá que se lembrar de fazer isso manualmente. Pior, se enviar o script para alguém, deverá explicar para esta pessoa o que fazer. Se quem vai receber o script for um usuário bem iniciante, a chance de algo sair errado é grande.
+
+Então o  eu recado é: use esta forma apenas por sua própria conta e risco, ok? Não recomendo trabalhar assim. O mais bacana é incluir a mudança de diretório no seu script, o que pode ser feito pelas duas variantes a seguir.
+
+\
+
+**A segunda: via comando, com "janelinha de seleção"**
+
+Um jeito intermediário de se trabalhar é incluir o comando `setwd` no seu script, e usar o argumento `choose.dir` para abrir uma janela e escolher a pasta. Este método tem a vantagem de incluir esta etapa no script, com a praticidade de deixar o usuário escolher o diretório de trabalho manualmente, quando a janela abrir. Caso esteja enviando seu script para um usuário inciante, basta avisar para ele escolher a pasta quando a janelinha abrir.
+
+É assim, ó:
+
+```{r}
+setwd(choose.dir())
+```
+
+Eu considero esta como a maneira ideal para um script que você sabe que vai compartilhar com alguém. Como cada pessoa tem as próprias pastas, com a própria (des)organização, então fica fácil para a pessoa que recebe um script apenas escolher a pasta correta no próprio computador, sem ter que alterar nada no script em si.
+
+\
+
+**E a terceira: via comando, sem "janelinha de seleção"**
+
+Aqui o esquema é ter **tudo** no script, sem precisar abrir nenhuma janela. A grande vantagem é na hora de rodar de novo um script que você mesmo fez: não precisa fazer nada, basta rodar o script e ver tudo acontecer, sem ter que selecionar ou modificar nada. Ou seja, o seu script fica totalmente automática, do início ao fim. Por outro lado, tem a desvantagem de ser necessário alterar o endereço da pasta caso você envie o script para alguém ou o esteja usando em outro computador.
+
+Pessoalmente, eu sempre uso este método nos meus próprios scripts, para torná-los mais automáticos, sem precisar selecionar nada durante a execução. É o auge da reprodutibilidade (tá certo essa palavra?!): toda vez que precisar rodar o script de novo, é só mandar ver. Aí, se por acaso preciso mandar o script para alguém, eu o altero colocando o argumento `choose.dir`, para facilitar as coisas.
+
+Nesta forma de trabalhar, você irá escrever "manualmente" o endereço da pasta. Uma boa pedida é copiar e colar o endereço diretamente do windows explorer (se você estiver usando windows, claro): basta clicar naquele menu que fica la no topo da pasta, com os nomes das pasta acessadas, que o windows converte em endereço. Aí tem um último detalhe: o windows escreve o endereço usando barra invertida, e o R vai querer a barra normal. É só substituir.
+
+Ó como fica neste exemplo:
+
+```{r}
+setwd("C:/R/bioestatistica")
+```
+
+Atente para o de sempre: o R diferencia maiúsculas de minúsculas e reconhece acentuação. Entao confira se os nomes estão corretos, ok? Ah, e o endereço sempre deve estar entre aspas!
+
+\
+
+**Uma dica:**
+
+Se você trabalhar com frequência com a terceira opção, é bem conveniente usar endereços curtos, que facilitem a digitação e são fáceis de localizar. Eu sempre crio uma pasta chamada "R" na raiz do computador (drive C:), e dentro dela crio as minhas subpastas de trabalho. Acho super prático, pois o caminho é bem mais curto do que da pasta Documentos no Windows. Com algum tempo trabalhando assim, você se acostuma, e aí a sua relação com o R melhora bastante! ;)
+
+\
+
+
+*********************
+
+*Bom, acho que terminamos a nossa primeira parte por aqui. Em um próximo script, quero falar um pouco sobre a importação dos dados em si, falando dos formatos de arquivos e tal. E, no futuro, talvez eu fale sobre exportação também, pois de vez em quando queremos salvar coisas que criamos no R.*
+
+*Abraços, e até a próxima!*
+
+*Prof. Marcos*

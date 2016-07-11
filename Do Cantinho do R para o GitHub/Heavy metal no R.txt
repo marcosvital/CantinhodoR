@@ -1,0 +1,269 @@
+## Cantinho do R
+### A incrível batalha estatística das bandas de Heavy Metal o/
+
+ou, se preferir, o título ~~chato~~ alternativo é:
+
+### Analisando um texto usando o R!
+
+
+*Marcos V. C. Vital*
+
+Para mais material, acesse <http://cantinhodor.wordpress.com/>
+
+\ 
+
+Este documento faz parte do material que disponibilizo no meu blog, o "Cantinho do R", e foi  foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais sobre eles, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+
+\ 
+
+Se Você está olhando este documento e não consegue entender nada, é sinal de que tem que começar do básico com o R. Uma boa pedida é dar uma olhada na minha apostila, para só depois voltar aqui. Confira ela aqui: <https://cantinhodor.wordpress.com/2015/03/28/a-boa-e-velha-apostila-basica-do-r/>
+
+\ 
+
+*********
+
+Oi, pessoal!
+
+O campo da [cienciometria](https://en.wikipedia.org/wiki/Scientometrics) é algo que me atrai há um bom tempo. Acho um barato estudar os padrões de produção de artigos, descobrindo o que se estuda em uma certa área, quais as suas tendências, o que mudou no tempo e tudo mais. Ainda sou iniciante no assunto, mas ando fuçando algumas coisas aqui e ali.
+
+Uma coisa que tangencia um pouco este tema é a análise das palavras em um texto. Imagine, por exemplo, que você tem em mãos os abstracts de vários artigos, e quer entender, de um ponto de vista estatístico, o que rola ali: quais são as palavras chave mais usadas, por exemplo.
+
+E aí chegamos a este script. Nele, faço uma brincadeira com análise de textos, com o objetivo de explorar as funcionalidades mais básicas do R ao ler e analisar palavras. Como ainda sou beeeem iniciante, a coisa vai ser basicona mesmo, ok? Mas pra tornar tudo mais divertido, vamos fazer isso ao som de um bom e velho Heavy Metal!!! Yeah!
+
+\ 
+
+
+*******************
+
+\ 
+
+####Do que vamos precisar:
+
+* os pacotes tm e SnowballC, que você pode instalar direto do menu "pacotes" do R;
+* arquivos de texto; na primeira vez, use os arquivos do exemplo, mas depois tente com arquivos próprios (serve blues, hard rock, samba e até textos científicos, olha só!);
+* rock and roll na veia! Qualquer coisa, [clique aqui](https://www.youtube.com/playlist?list=PLOKVTjzY3Z9s-B1NwdvJqedCh94uNa-YI) e seja feliz.
+
+\ 
+
+*********************
+
+\ 
+
+####Lendo os arquivos de texto
+
+Nós vamos trabalhar aqui, como sempre, com arquivos do tipo .txt. Mas a diferença é que eles não foram criados bonitinhos e organizados no excel. São arquivos com texto puro, e não uma tabela de dados.
+
+Pra de quebra mostrar que o R é espertinho e conectado ao mundo moderno, vamos ler os arquivos diretamente da internet! Legal, né?
+
+Então bora carregar os pacotes necessários, e então ler os arquivos:
+
+```{r}
+library(tm)
+library(SnowballC)
+
+iron.maiden<-readLines("http://m.uploadedit.com/ba3e/1438210406304.txt")
+motorhead<-readLines("http://m.uploadedit.com/ba3e/1438210490660.txt")
+
+```
+
+* A função `readLines` pode ser novidade para você. Ela lê linhas de um texto qualquer (como o próprio nome sugere nada sutilmente, né?).
+
+As bandas dispensam apresentação, certo? CERTO?! Espero que sim. Se não, pare um pouquinho e vá ler a respeito enquanto escuta algumas músicas.
+
+Agora vamos dar uma rápida espiada no que importamos:
+
+```{r}
+head(iron.maiden)
+
+head(motorhead)
+
+```
+
+É isso aí!
+
+Bom, note uma coisa importante: o R colocou tudo entre aspas, e isto não fazia parte dos arquivos originais. Este é o mesmo comportamento geral que ele tem ao ler nomes em variáveis categóricas nas nossas tabelas de dados, então não é de se estranhar que ele tenha feito isso. Daqui a pouco a gente faz com que ele reconheça as palavras de maneira individual, certo?
+
+Mas vamos lá, o que temos nestes dois arquivos?
+
+De um lado, temos Fear of the Dark, Hallowed be thy Name e Run to the Hills. Do outro, Ace of Spades, Overkill, Deaf Forever e Too Late, Too Late (o Motörhead ganhou uma música a mais porque as suas letras são mais curtas).
+
+Os dois arquivos foram montados com uma colagem das letras das músicas, uma após a outra, sem separação ou organização. Como a nossa proposta é analisar as palavras usadas, não precisamos organizar as músicas individualmente.
+
+Continuando, agora que temos tudo dentro do R, precisamos fazer ele reconhecer as palavras usadas. São várias etapas; então, parafraseando algum professor que não me lembro mais: "como diria o estripador, vamos por partes".
+
+\ 
+
+*********************
+
+\ 
+
+####Transformando o texto em uma planilha de dados!
+
+Beleza, vamos lá. O primeiro passo é colocar os textos em um formato que o R usalmente lê dados: um dataframe. Esta é uma etapa rápida e fácil:
+
+```{r}
+iron.maiden.data<-data.frame(iron.maiden)
+
+motorhead.data<-data.frame(motorhead)
+```
+
+Aqui usamos a função `data.frame`, que é usada para criar um objeto do tipo dataframe.
+Veja como os dados se parecem agora:
+
+```{r}
+head(iron.maiden.data)
+
+head(motorhead.data)
+```
+
+Parece um pouco com o que era antes, mas sem as aspas. Mas, por enquanto, nada demais, então vamos seguir, beleza?
+
+Nós agora vamos dar um pequeno salto, e começar a trabalhar com outra classe de objeto no R: corpus. A palavra vem da linguística, e se refere a um [conjunto de dados linguísticos, normalmente em forma textual](https://pt.wikipedia.org/wiki/Lingu%C3%ADstica_de_corpus). Lá vai:
+
+```{r}
+iron.corpus<-Corpus(DataframeSource(iron.maiden.data))
+motor.corpus<-Corpus(DataframeSource(motorhead.data))
+```
+
+Aqui usamos a função `Corpus` do pacote `tm` para criar nossos novos objetos. Fique atento para o C maiúsculo no nome da função, beleza? Mas tem mais um detalhe importante: dentro do comando, usamos a função `DataframeSource` para ler os dados. Ela faz um meio de campo para gente, lendo os nossos dados, que estão em um dataframe, e convertendo para texto (na prática, ela lê cada linha de um dataframe como se fosse um documento de texto, mas isso não é tão importante para este nosso exemplo).
+
+Vamos ver o que aconteceu? Aqui está:
+
+```{r}
+iron.corpus
+
+motor.corpus
+```
+
+Aqui o R apenas mostra um resumo, mas tudo bem. Ele agora encara os nossos dados como conjuntos de documentos de texto, e é isso que a gente queria. Vamos para mais uma etapa?
+
+\ 
+
+*********************
+
+\ 
+
+####Processando os textos
+
+Agora vamos começar a trabalhar com os nossos dois conjuntos de textos. Neste momento, as etapas poderão variar dependendo dos nosso objetivos, então tomem o que vamos fazer aqui apenas como um exemplo genérico. Se quiser saber mais, fuce um pouco a [documentação do pacote tm](http://cran.r-project.org/web/packages/tm/index.html), ok? Vamos lá:
+
+```{r}
+#Primeiro para o Iron:
+iron.corpus<-tm_map(iron.corpus, removePunctuation, preserve_intra_word_dashes = FALSE)
+iron.corpus<-tm_map(iron.corpus, removeWords, stopwords("english"))
+iron.corpus<-tm_map(iron.corpus, stemDocument)
+
+#E agora para o Motorhead:
+motor.corpus<-tm_map(motor.corpus, removePunctuation, preserve_intra_word_dashes = FALSE)
+motor.corpus<-tm_map(motor.corpus, removeWords, stopwords("english"))
+motor.corpus<-tm_map(motor.corpus, stemDocument)
+```
+
+Bora lá entender melhor o que fizemos. A função `tm_map` é uma função que cumpre um papel de intermediar a aplicação de outras funções: ela permite aplicar funções que vão modificar os nossos corpora (pois é, o plural de corpus é corpora; bonito, né?).
+
+Aqui, fizemos três modificações.
+* `removePunctuation` faz o que o nome sugere: remove a pontuação.
+* `removeWords` remove palavras, e nós usamos `stopwords` para remover palavras que não vão fazer muito sentido em uma análise textual. Se quiser saber mais, experimente usar o comando `stopwords("english")`, e veja a lista de palavras que ele removeu dos nossos textos.
+* por fim, `stemDocument` faz a ["stemização"](https://pt.wikipedia.org/wiki/Stemiza%C3%A7%C3%A3o) da palavra, que é um processo no qual uma palavra flexionada é transformada "de volta" para a sua raiz.
+
+Beleza, vamos continuar, mais uma etapa!
+
+\ 
+
+*********************
+
+\ 
+
+####Contando as palavras
+
+O nosso objetivo, agora, é contar o número de vezes que as palavras aparecem nos nossos corpora. Ou seja, queremos uma tabela que indique a frequência de palavras usadas. Legal, né? E é bem simples de se fazer, vamos lá:
+
+```{r}
+iron.matrix<-DocumentTermMatrix(iron.corpus)
+
+motor.matrix<-DocumentTermMatrix(motor.corpus)
+```
+
+Aqui usamos a função `DocumentTermMatrix` para criar uma matriz na qual as colunas são as palavras, e as linhas são os "documentos". Entre aspas aqui, porque para os nossos dados, vamos juntar tudo em um conjunto só, já que não temos documentos separados de fato. Ah, de novo, cuidado com as maiúsculas no nome da função, ok?
+
+Se quiser olhar o resultado, execute `inspect(iron.matrix)`. Vai ser um resultado enorme no console, ok?
+
+Os objetos que criamos ainda não são matrizes de verdade. Eles são listas, dentro das quais uma parte são as nossas matrizes. Se estiver curioso, execute um `str(iron.matrix)` para ver como o nosso objeto é composto por uma lista, que tem várias partes. Para simplificar tudo na matriz mesmo, vamos usar de novo o `inspect`:
+
+```{r results='hide'}
+iron.matrix<-inspect(iron.matrix)
+
+motor.matrix<-inspect(motor.matrix)
+```
+
+O R vai mostrar todo o resultado quando você executar isso. Aqui no script eu omiti o resultado, só pra não encher demais a tela.
+
+Mas olha só, ainda precisamos de mais uma coisa. Como eu disse antes, a função `DataframeSource` leu cada linha como um documento; por isso as nossas matrizes tem tantas linhas! Então vamos somar tudo, de forma que para cada conjunto de documentos teremos uma contagem simples de palavras. É bem simples:
+
+```{r}
+contagem.iron<-data.frame(colSums(iron.matrix))
+
+contagem.motor<-data.frame(colSums(motor.matrix))
+```
+
+Aqui usamos de novo `data.frame`, e dentro dela usamos `colSums` para somar os dados de todas as linhas em uma só. Veja como ficou cada objeto:
+
+```{r}
+head(contagem.iron)
+
+head(contagem.motor)
+```
+
+Maneiro! Temos agora um objeto para cada banda, com uma coluna de palavras e outra com o número de vezes com que cada palavra aparece! O R ou não é um barato? Agora vamos brincar com os dados!
+
+\ 
+
+*********************
+
+\ 
+
+####Criando uma nuvem de palavras
+
+Por pura diversão, que tal comparar as frequências de palavras visualmente com uma daquelas nuvenzinhas de palavras que costumam aparecer na internet? Pode não ser um método muito bom do ponto de vista estatístico, mas é tão bonitinho!
+
+Você vai precisar do pacote `wordcloud`, ok? Vamos lá:
+
+```{r}
+library(wordcloud)
+
+par(mfrow=c(1,2))
+wordcloud(rownames(contagem.iron), contagem.iron[,1], min.freq=3)
+text(x=0.5, y=0, "Iron Maiden", col="red")
+wordcloud(rownames(contagem.motor), contagem.motor[,1], min.freq=3, main="Motorhead")
+text(x=0.5, y=0, "Motorhead", col="red")
+
+
+```
+
+Aqui tem alguns detalhes úteis. Usei o comando `par` para definir os parâmetros da janela de gráfico que vai ser utilizada. Toda vez que você usa esta função e define alguma coisa, isso vale para os gráficos criados na sequência. Mas depois que você fechar a janelhina com o gráfico, aqueles parâmetros são perdidos. Dentro do `par`, usei `mfrow` para definir uma divisão na janela, de forma que os gráficos ficassem um ao lado do outro. Neste comando, o 1 é o número de "linhas", enquanto o 2 é o número de "colunas". Ou seja, se eu usasse `mfrow=c(2,1)`, os gráficos ficariam um em cima do outro. Legal, né?
+
+A função `wordcloud` é fácil de entender: ela quer a lista de palavras, que acessamos usando um `rownames` das nossas tabelas. E depois, ela quer a frequência das palavras, que estão na primeira (e única, no caso) coluna de cada tabela.
+
+E aí, pra fechar, usei a função `text` pra colocar os nomes das bandas em cada gráfico, pois a função `wordcloud` não faz isso. A `text` usa coordenadas, então usei uma posição x e outra y pra definir a posição dos nomes nos gráficos; pra achar as coordenadas ideias, normalmente vamos tentando e vendo o resultado, na base da tentativa e erro mesmo.
+
+\ 
+
+****************
+
+\ 
+
+*Acho que por aqui está bom, por hora. É claro que a gente poderia explorar mais estes dados, fazer diferentes tipos de gráficos e tudo mais, mas vamos deixar para uma outra hora, ok?*
+
+*Se você quer aprender mais, este seria um bom momento para brincar um pouco com os dados, mexendo por conta própria e tentando fazer algo diferente. Que tal, por exemplo, tentar fazer um gráfico de barras? Fica aqui o desafio.*
+
+*Ah, sim, e o veredito do resultado da batalha eu deixo para cada um. ;)*
+
+*Abraços, e até a próxima!*
+
+*Prof. Marcos*

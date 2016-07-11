@@ -1,0 +1,230 @@
+## Cantinho do R
+### Tiros, explosões e destruição: a grandiosa batalha dos tanques de guerra no R!!!
+
+### Sim, o R tem joguingos, acredita?!
+*(mas fique de olho na sua produtividade, viu?)*
+
+*Marcos V. C. Vital*
+
+Para mais material, acesse <http://cantinhodor.wordpress.com/>
+
+\ 
+
+Este documento faz parte do material que disponibilizo no meu blog, o "Cantinho do R", e foi  foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais sobre eles, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+
+\ 
+
+Se Você está olhando este documento e não consegue entender nada, é sinal de que tem que começar do básico com o R. Uma boa pedida é dar uma olhada na minha apostila, para só depois voltar aqui. Confira ela aqui: <https://cantinhodor.wordpress.com/2015/03/28/a-boa-e-velha-apostila-basica-do-r/>
+
+\ 
+
+*********
+
+Oi, pessoal!
+
+Pois é, por esta vocês não esperavam: joguinhos no R!
+
+Mas Marcos, este espaço não era pra aprender bioestatística e sua aplicações no R? Como ver uns joguinhos simples nele pode me ajudar? Não vai ser pura perda de tempo?! Acreditem ou não, acho que podemos sim aprender um pouco com isso. Sério mesmo!
+
+Vejam só, uma das coisas legais do R é a forma que ele costuma nos levar a transitar de um uso "comum", das funções prontas, para bem lentamente começarmos a fuçar, explorar, mexer, tentar criar as próprias funções (e errar muito) e, finalmente, começarmos a programar um pouquinho - mesmo quando não temos conhecimento ou treinamento prévio sobre programação. Isto, na verdade, era um dos propósitos do [John Chambers](https://en.wikipedia.org/wiki/John_Chambers_(statistician)), o cara que criou [a linguagem S](https://en.wikipedia.org/wiki/S_(programming_language)), que é a precursora do R. Então você começa como um usuário comum, brigando com as funçõezinhas básicas pra fazer Teste T e ANOVA, e "sem querer" começa a sacar algumas coisas de programação. E é sério, isso acontece mesmo com muitos usuários! Não é um caminho obrigatório, mas é uma possibilidade muito legal que fazer parte do uso do R.
+
+Certo, mas o que diabos os jogos tem a ver com isso aí? A questão é que pra um cara criar um joguinho no R, ele tem que programar, e isso exige um domínio legal de programação e da linguagem do R. E aí o usuário que está aprendendo tem a chance de olhar o código e tentar sacar um pouquinho do que está contecendo ali. Muitas vezes, aliás, um código para algo tão inusitado exige bastante criatividade, o que torna o aprendizado por trás disso ainda mais interessante.
+
+Como eu nunca aprendi lógica de programação ao longo da minha formação (e a maioria das pessoas ligadas à biologia está na mesma que eu), eu tento aprender a lógica da construção de funções no R olhando para funções prontas. Pode ser um exercício difícil no começo, mas com o tempo a gente vai sacando melhor como as coisas funcionam, e acabamos aprendendo um pouco. E é por isso que eu estou aqui, escrevendo este script pra vocês. Beleza?
+
+(Tá certo, não é totalmente verdade, eu sou um nerd e adoro joguinhos, mesmo os mais simples, e acho um barato que possamos colocar joguinhos dentro do R, hahahaha)
+
+Então vamos lá!
+
+\  
+
+####O tal joguinho dos tanques de guerra
+
+Certo, não espere nada incrível, afinal, estamos em um ambiente de programação para estatística. Mas dá pra se divertir, hehe. Se você já jogou [aquele joguinho antigo dos canhões no bom e velho windows 3.11](http://www.mobygames.com/game/win3x/bang-bang) (sim, se você for velho como eu...), vai saber do que se trata. É uma disputa de tiros, na qual você regula a força e o ângulo do seu tiro e, por tentativa e erro, tenta ser mais rápido do que seu adversário (que no caso é o próprio R, olha só!) em começar a atingir o alvo.
+
+Tá aqui a carinha dele:
+
+![alt text](https://dl.dropboxusercontent.com/u/12074355/Cantinho%20do%20R/Imagens/Tanks%20no%20R.png)
+
+Bonitinho, né? =D
+
+**Certo, e de onde veio este jogo?**
+
+Eu o descobri por acaso na [lista R-br](http://r-br.2285057.n4.nabble.com/), e felizmente o autor participa da lista e respondeu quando pedi mais detalhes. O nome dele é Rodrigo Coster, e ele tem uma [página no GitHub onde compartilha alguns códigos de R para joguinhos](https://github.com/rcoster/Rfun). **Sim, ele tem vários códigos de joguinhos no R!!! :)**
+
+**Tá bom, mas eu quero é jogar!!!**
+
+Tá, calma! Vamos lá, então. O jeito mais fácil é o seguinte: você baixa o arquivo tanks.R, [ele está lá da página do Rodrigo](https://github.com/rcoster/Rfun), e salva em sua pasta de trabalho no R (que não será bem assim "de trabalho" desta vez, né?). Se quiser um link direto pro arquivo (la no site você teria que copiar o código e salvar em um script), [pode baixar aqui](https://dl.dropboxusercontent.com/u/12074355/Cantinho%20do%20R/Tanks.R). Aí usa o comando `source`, [que já conhecemos antes](link da postagem que eu mostro isso), para carregar a função. Depois disso, basta executar a função criada, a `tank`. Assim:
+
+```{r}
+setwd("C:/R/Cantinho do R") #Como sempre, determine aqui o seu próprio diretório
+
+source("Tanks.R")
+
+tank()
+```
+
+Simples, não é?
+
+Este é o método mais rápido e limpinho, pois você nem olha pra cara do código.
+
+**Ei, mas como eu jogo?!**
+
+A jogabilidade é super simples: as setas pra cima e pra baixo no teclado alteram a força do tiro, enquanto as setas para direita e esquerda alteram o ângulo. Quando quiser atirar, basta usar a barra de espaço. Aí você dá seu tiro, e depois seu oponente também. Veja o quanto seu tiro chegou perto, altere ângulo e força para tentar melhorar a pontaria, e continue. Cada tiro certeiro reduz um pouco da vida do oponente, e quem ficar com vida = 0 primeiro perde.
+
+Simplão, mas pode ser viciante! ;)
+
+**Mas eu quero olhar o código!**
+
+Pois é, uma coisa legal é dar aquela espiada no código, tentar sacar o que está acontecendo lá. Você pode abrir o arquivo e olhar (ele abre como script, já que é um arquivo com extensão .R), mas vou aproveitar e colocar tudo aqui, ok? Se quiser, no lugar de usar `source` você pode simplesmente copiar e colar o código abaixo no R, que vai funcionar do mesmo jeito.
+
+
+```{r }
+# Criado por Rodrigo Coster - 2010
+# www.dadosaleatorios.com.br
+
+tank <- function(x) {
+ desenha <- function(ang1,ang2,t) {
+  ang1 <- ang1
+  ang2 <- ang2
+  par(mar=rep(0,4),xaxs='i',yaxs='i')
+  plot(seq(0,t,by=0.01),mapa,type='n',ylim=c(0,t))
+  xplot <- seq(0,t,by=0.01)
+  polygon(c(xplot,t,0),c(mapa,t,t),col='slategray1')
+  segments(p1,y1,sin(ang1/180*pi)*(t/30)+p1,cos(ang1/180*pi)*(t/30)+y1,lwd=2)
+  segments(p2,y2,-sin(ang2/180*pi)*(t/30)+p2,cos(ang2/180*pi)*(t/30)+y2,lwd=2)
+  points(p1,y1,pch=16,cex=3,col=4)
+  points(p2,y2,pch=16,cex=3,col=2)
+  polygon(c(xplot,t,0),c(mapa,0,0),col="green1")
+  legend('topleft',paste(formatC(c('Angulo:','Força:','Vida:')),formatC(c(ang1,f1,v1),digits=2,width=7,format='f')),bty='n')
+  legend('topright',paste(formatC(c('Angulo:','Força:','Vida:')),formatC(c(ang2,f2,v2),digits=2,width=7,format='f')),bty='n')
+  text(t/2,t-.5,paste('Distância: ',round(t1,2)))
+  if (v2 < 0) { text(10,10,'Você ganhou! \\o/',cex=3) ; stop('Fim de jogo') }
+  if (v1 < 0) { text(10,10,'Você perdeu! <o>',cex=3) ; stop('Fim de jogo') }
+ }
+ atira <- function(p,ang,forc,t,...) {
+  ang1 <- (ifelse(p == 2,ang-90,90-ang))/180*pi
+  x <- ifelse(p == 1,p1,p2)
+  a <- -(tan(ang1)/forc) ^2*(t1/20)
+  b <- (tan(ang1)-2*a*x)
+  c <- -(a*x^2 + b*x)
+  x <- if (p == 1) seq(p1,t,.01) else seq(p2,.01,-.01)
+  yt <- a * x^2 + b*x + c + ifelse(p == 1,y1,y2)
+  y <- rep(NA,length(yt))
+  if (sum(yt < mapa[x*100]) > 1) { y[1:(which(yt < mapa[x*100])[2])] <- yt[1:(which(yt < mapa[x*100])[2])] }
+  else { y <- yt }
+  check <- ifelse(p == 1,(p2-p1-.39)*100,(p2-p1-.39)*100)
+  if (!is.na(y[check])) {
+   pi <- if (p == 1) p2 else p1
+   pi <- pi + c(.39,-.39)
+   alv <- a * pi^2 + b*pi + c + ifelse(p == 1,y1-y2,y2-y1)
+   if (any(alv < 0) && any(alv > 0)) {
+    pi <- if (p == 1) p2 else p1
+    d <- dnorm((a * pi^2 + b*pi + c + ifelse(p == 1,y1-y2,y2-y1))*10)
+    if (p == 1) { v2 <<- v2-d*100 }
+    if (p == 2) { v1 <<- v1-d*100 }
+   }
+  }
+  lines(x,y,lty=2,...)
+  return(invisible(cbind(x,y)))
+ }
+ tecla <- function(bot) {
+  if (bot %in% c('Left','Right')) { ang1 <<- min(max(ang1 + ifelse(bot == 'Left',-.25,+.25),0),90) }
+  if (bot %in% c('Up','Down')) { f1 <<- max(f1 + ifelse(bot == 'Up',.05,-.05),0) }
+  if (bot == ' ') { atira(1,ang1,f1,t,col=1) ; Sys.sleep(1) ; desenha(ang1,ang2,t) ; joga() }
+  desenha(ang1,ang2,t)
+  return()
+ }
+ joga <- function() {
+  if (n == 1) {
+   m <- mapa[(p1*100+1):(p2*100-1)]
+   a2 <- atan((m-y1)/seq(.01,p2-p1-.01,.01))
+   a1 <- atan((m-y2)/seq(p2-p1-.01,.01,-.01))
+   ang2 <<- max(min(70-max(a1,a2)*180/pi,70),20)
+   f2 <<- (p2-p1)*t1/70
+  }
+  else {
+   f2 <<- f2t
+  }
+  desenha(ang1,ang2,t)
+  o <- atira(2,ang2,f2,t)
+  fv <<- rbind(fv,c(f2,ifelse(is.na(o[(nrow(o) - p1*100),2]),1,2)))
+  if ((any(fv[,2] == 1)) && (any(fv[,2] == 2))) {
+   f2t <<- mean(c(max(fv[fv[,2] == 1,1]),min(fv[fv[,2] == 2,1])))
+  }
+  else {
+   if (is.na(o[(nrow(o) - p1*100),2])) {
+    f2t <<- f2*1.20*(t1/80+1)
+    ln <<- n
+   }
+   else {
+    f2t <<- f2*.8
+   }
+  }
+  f3t <<- f2t
+  Sys.sleep(1) 
+  desenha(ang1,ang2,t)
+  n <<- n+1
+ }
+ ln <<- vector()
+ f2t <- 0
+ fv <- vector()
+ f1 <- 2
+ f2 <- 2
+ v1 <- 100
+ v2 <- 100
+ ang1 <- 45
+ ang2 <- 45
+ t1 <- round(runif(1,5,20),2)
+ t <- 20
+ p1 <- round(runif(1,.05,.2)*t,2)
+ p2 <- round(runif(1,.80,.95)*t,2)
+ mapa <- filter(cumsum(sample(c(.25,.1,0,-.1,-.25),t*100+7,rep=T,prob=c(1,5,20,5,1))),rep(1,7)/7)
+ mapa <- mapa[!is.na(mapa)]
+ mapa <- mapa - min(mapa) + .1
+ mapa[mapa > 5] <- 5
+ mapa[seq(p1*100-49,p1*100+49)] <- mean(mapa[seq(p1*100-49,p1*100+49)])
+ mapa[seq(p2*100-49,p2*100+49)] <- mean(mapa[seq(p2*100-49,p2*100+49)])
+ y1 <- mapa[p1*100]
+ y2 <- mapa[p2*100]
+ desenha(ang1,ang2,t)
+ n <- 1
+ getGraphicsEvent('Tanks',onKeybd=tecla)
+ atira(1,ang1,2,t,col=1)
+ Sys.sleep(.5)
+ atira(2,ang2,2,t,col=4)
+ Sys.sleep(.5)
+}
+```
+
+Legal, né? Sei que pode parecer assustador, mas aqui e ali você pode conseguir entender algum pedaço, então vale à pena dar uma olhada. Claro, se você ainda é beeeem iniciante no R, é natural que tudo isso aí seja super difícil de entender. Mas com o tempo vale à pena olhar para "dentro" das funções, e um dia algumas coisas começam a fazer sentido. Só não pode desanimar, viu?
+
+**Tá, acho legal, mas agora eu quero é ver mais joguinhos no R. Tem?**
+
+Olha, olha, viu? Cuidado com a produtividade, pessoal!
+
+Então, voltando lá [na página do Rodrigo](https://github.com/rcoster/Rfun) vocês acharam outras funções, dêem uma espiada la.
+
+O R também tem um pacote oficial (sim, tá la no CRAN e tudo mais) com coisas assim: [o pacote fun](https://cran.r-project.org/web/packages/fun/index.html). Tem vários joguinhos nele.
+
+E também há [o pacote sudoku](https://cran.r-project.org/web/packages/sudoku/index.html), também oficial lá no CRAN. Ele tem gerador e "resolvedor" de sudokus.
+
+E no dia que inventarem um Tetris pro R, não me avisem, senão minha produtividade geral vai cair assustadoramente. ;)
+
+\ 
+
+************
+
+\ 
+
+*E é isso aí, galera. R também pode ser divertido, ter descontração. Espero que este script tenha despertado o interesse de vocês, ou pelo menos gerado um pouquinho de diversão.*
+
+*Abraços, e até o próximo script!*
+
+*Prof Marcos*

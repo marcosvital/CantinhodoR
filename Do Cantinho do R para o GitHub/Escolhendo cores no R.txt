@@ -1,0 +1,68 @@
+## Cantinho do R
+### Uma super explosão de cores com o R :D
+
+Ou, se quiser um título ~~chato~~ claro e direto:
+
+### Uma lista prática de cores para o R
+
+*Marcos V. C. Vital*
+
+Para mais material, acesse <http://cantinhodor.wordpress.com/>
+
+\ 
+
+Este documento faz parte do material que disponibilizo no meu blog, o "Cantinho do R", e foi  foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais sobre eles, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+
+\ 
+
+Se Você está olhando este documento e não consegue entender nada, é sinal de que tem que começar do básico com o R. Uma boa pedida é dar uma olhada na minha apostila, para só depois voltar aqui. Confira ela aqui: <https://cantinhodor.wordpress.com/2015/03/28/a-boa-e-velha-apostila-basica-do-r/>
+
+\ 
+
+*********
+
+Oi, pessoal!
+
+Recebi, por email, uma dica bem legal que me foi enviada pelo [Lucas Perillo](http://lattes.cnpq.br/9100354010857966), da [Bocaina Biologia da Conservação](http://www.biologiadaconservacao.com.br/). Ele me enviou uma página da UFPA que mostra uma lista de nomes de cores usadas em linguagens de programação, e que funciona no nosso querido R! O bacana da lista é que ela tem uma tabelinha com os nomes (que o R reconhece) dentro de uma célula da cor correspondendente! Ou seja: você pode acessar a tabela, escolher uma cor que gostar e usar no R!
+
+Então vamos lá? Vou aqui mostrar rapidinho, e depois vocês podem se divertir sozinhos em casa. ;)
+
+\ 
+
+*******************
+
+\ 
+
+####Cores no R: uma lista imensa.
+
+[A lista está aqui, é só clicar e ser feliz.](http://www.ufpa.br/dicas/htm/htm-cor2.htm)
+
+No R, você pode definir qualquer cor usando o nome entre aspas, é bem fácil. Só para dar um exemplo, veja o gráfico abaixo, no qual usei alguams cores escolhidas arbitrariamente pela lista:
+
+```{r}
+cores<-c("Gainsboro", "Lavender", "DeepSkyBlue", "LawnGreen", "Gold",
+         "MediumOrchid","LightSalmon", "Sienna", "Tomato", "DeepPink1" )
+
+barplot(1:10, col=cores)
+```
+
+É isso aí. Agora você pode usar aquele tom super específico de violeta claro que sempre teve vontade de colocar no gráfico mas não sabia como. :)
+
+
+\ 
+
+************
+
+\ 
+
+*Bom, pessoal, é isso aí, era curtinho mesmo, só queria mostrar a lista de cores e seu funcionamento no R. Espero que seja útil, ou pelo menos torne seus gráficos mais divertidos e coloridos!*
+
+*Abraços, e até o próximo script!*
+
+*Prof Marcos*

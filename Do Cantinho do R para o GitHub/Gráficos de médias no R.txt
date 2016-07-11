@@ -1,0 +1,241 @@
+## Cantinho do R
+### O bom e velho gráfico com médias e barras de erros
+
+ou, se preferir:
+
+### Por que o R não faz isso de um jeito mais simples?!
+
+
+*Marcos V. C. Vital*
+
+Para mais material, acesse <http://cantinhodor.wordpress.com/>
+
+\ 
+
+Este documento faz parte do material que disponibilizo no meu blog, o "Cantinho do R", e foi  foi criado utilizando o software R, o programa RStudio e a linguagem Markdown. Para saber mais sobre eles, acesse:
+
+<http://www.r-project.org/>
+
+<http://www.rstudio.com>
+
+<http://rmarkdown.rstudio.com/>
+
+\ 
+
+Se Você está olhando este documento e não consegue entender nada, é sinal de que tem que começar do básico com o R. Uma boa pedida é dar uma olhada na minha apostila, para só depois voltar aqui. Confira ela aqui: <https://cantinhodor.wordpress.com/2015/03/28/a-boa-e-velha-apostila-basica-do-r/>
+
+\ 
+
+*********
+
+Oi, pessoal!
+
+Eu nunca entendi por que, mas o R não faz um gráfico de médias e barras de erro/desvio com um comandão basicão tipo o `boxplot`. Sério, é um mistério para mim, pois é algo que qualquer software de estatística faz sem problemas, e um tipo de gráfico que é muito usado por aí.
+
+Enfim, não faz, é a vida, né? Bom, mais ou menos! As pessoas precisam muito deste tipo de gráfico, e acho legal termos uma maneira fácil e rápida de fazê-los.
+
+Neste breve script, então, quero mostrar uma solução bacana, que conheci outro dia meio que por [acaso na internet](http://stackoverflow.com/questions/13032777/scatter-plot-with-error-bars).
+
+Mas Marcos, eu vi [naquela sua apostila](https://cantinhodor.wordpress.com/2015/03/28/a-boa-e-velha-apostila-basica-do-r/) que podemos usar o pacote `sciplot` pra isso, com a função `lineplot.CI`. Então o que vai ter de novo aqui? Então, a novidade bacana é que esta nova maneira não usa pacotes! Ou seja, você faz diretão, sem precisar carregar nada. Tá certo, parece pouco, mas para o usuário iniciante é legal. E mesmo para um usuário experiente é bacana, pois é sempre bom conhecer caminhos diferentes no R.
+
+Então vamos lá? Só se for agora!
+
+\  
+
+*******
+
+**Do que vamos precisar:**
+
+* Você vai usar um conjunto de dados que já está no R, olha que coisa legal!
+* E também não vai precisar carregar pacotes.
+* Então esta lista do que vamos precisar é desnecessária?
+* É, você tem razão! ;)
+
+\  
+
+**************
+
+**Carregando os dados**
+
+O R tem alguns conjuntos de dados na memória, que são bem fáceis de usar. Estou com um script em andamento no qual vou falar sobre isso, então por enquanto vamos só carregar um destes conjuntos e pronto, ok? Taí, ó:
+
+```{r}
+data(iris)
+attach(iris)
+```
+
+Pronto! Mas já? Pois é, é simples. Mas vamos olhar pros dados rapidão:
+
+```{r}
+summary(iris)
+```
+
+Legal, aí estão eles. Estes são dados de morfologia das flores de três espécies de plantas. Temos medidas do comprimento e largura das sépalas e pétalas, com 50 flores medidas por espécie.
+
+Então estamos prontos, vamos lá!
+
+\  
+
+
+*************
+
+####Criando gráficos de médias e desvio (ou erro)
+**Sem usar pacotes!**
+
+Nós vamos começar criando um objeto para "guardar" as médias e as medidas de desvio ou erro que desejarmos usar. Neste exemplo, vamos usar o desvio padrão, ok? Vamos lá, com a ajuda da função `tapply`:
+
+```{r}
+médias<-tapply(Sepal.Length, Species, mean)
+desvios<-tapply(Sepal.Length, Species, sd)
+```
+
+Usamos o comprimento das sépalas, mas você pode brincar com as outras variáveis à vontade, se quiser.
+
+Agora vamos criar o gráfico. O truque é o seguinte: a gente cria o gráfico com os pontos representando as médias, e depois, na sequência, usaremos a função `arrows` para adicionar as barrinhas de desvio. É mole:
+
+```{r}
+plot(1:3, médias, ylim=range(c(médias-desvios, médias+desvios)), pch=16)
+
+arrows(1:3, médias-desvios, 1:3, médias+desvios, angle=90, code=3)
+
+```
+
+Tcharam!!!!!!!!
+
+Deu certo! Vamos começar entendendo os detalhes, e depois vamos melhorar, porque não está tãããão bom assim, né?
+
+* como a função `plot`, neste caso, não aceitaria a variável "Species" como eixo x, tive que pedir para o R apenas numerar de 1 a 3; depois mexemos nisso!
+* usei a função `range` dentro do argumento `ylim`, para o R entender que o gráfico precisa ser grande o suficiente para caber as barras de desvio que serão colocadas.
+* Na função `arrows`, o argumento `angle=90` faz com que a barrinha tenha a ponta "achatada", pois o normal dela é uma ponta em forma de seta, e não em forma de traço.
+* E, por fim, o argumento `code=3` faz com que os traços fiquem nas duas pontas, acima e abaixo do desvio.
+
+Certo, mas vamos melhorar um pouco essa parada? De novo, mas com mais argumentos (comentados logo depois):
+
+```{r}
+x<-1:nlevels(Species)
+
+plot(x, médias, ylim=range(c(médias-desvios, médias+desvios)), pch=16,
+     las=1, xlab="Espécie", ylab="Comprimento das sépalas")
+
+arrows(x, médias-desvios, x, médias+desvios, angle=90, code=3, length=0.05)
+
+```
+
+* Aqui eu automatizei o lance do eixo x. Usei a função `nlevels` para o R contar quantas médias ele deve plotar. Esta nova forma é mais legal, pois vale para qualquer outro exemplo com o qual você for trabalhar.
+* `las`, `xlab` e `ylab` devem ser velhos conhecidos para vocês, usei para melhorar o visual.
+*Usei o argumento `length` para diminuir o tamando do traço acima e abaixo das barras.
+
+Beleza, ficou bacana! Maaaaaas, e essa coisa aí com o eixo x, hein? Tem como resolver?
+
+Claro que sim! Nós podemos brincar com a função `axis` e adicionar os eixos manualmente, olha que legal! Vamos lá?
+
+```{r}
+x<-1:nlevels(Species)
+
+plot(x, médias, ylim=range(c(médias-desvios, médias+desvios)), pch=16,
+    xlab="Espécie", ylab="Comprimento das sépalas", axes=F)
+
+axis(2, las=1)
+axis(1, x, levels(Species))
+box()
+
+arrows(x, médias-desvios, x, médias+desvios, angle=90, code=3, length=0.05)
+
+```
+
+Ahhhh, garoto, ficou perfeito! O que fizemos?
+
+* Primeiro, o argumento `axes=F` foi usado pro R traçar o gráfico sem eixos.
+* Depois, com a função `axis` adicionamos os dois eixos manualmente, sendo que no eixo x (que é o número 1 pro R) nós avisamos pra ele contar o número de tracinhos usando aquele nosso valor de x, e para usar os nomes das categorias da nossa variável "Species" para colocar os labels.
+* Finalmente, pro gráfico não ficar com cara de peladão, usamos fa função `box` pra colocar a tradicional caixinha em volta.
+* Ah, sim, e notem que eu mudei o `las=1` de lugar. Ele não está mais dentro do `plot`, já que os eixos são traçados depois, então o coloquei dentro de `axis` na hora de criar o eixo y, ok?
+
+Pronto, você agora pode, sempre que quiser, usar o R para calcular este tipo de gráfico sem esquentar a cabeça com carregar algum pacote ou coisa do tipo. Tá certo, o código ficou ali meio grandão, mas lembre-se que você pode salvar um script com ele e apenas adaptar para o seus dados, não vai ser difícil.
+
+No mais, é sempre legal experimentar estes caminhos diferentes no R, a gente acaba aprendendo novas funções e novos truques.
+
+\  
+
+******
+
+####Mas peraí, não acabou não!
+**Sério, tem um bônus maneiro**
+
+Já pensou se esta fosse uma função prontinha pra usar no R? Seria legal, né?
+Então vamos fazer com que ela seja assim! :D
+
+Vamos la! O que nós vamos fazer é transformar o código que criamos em uma função do R, e depois salvar em um arquivo. Depois, todas as vezes que vocês precisarem fazer este gráfico, basta carregar o arquivo da função com o comando `source`, e pronto! Legal, né? Quero mostrar como isso é feito, e depois dou de presente o arquivo para vocês, beleza?
+
+```{r}
+
+plotmédias<-function(var.x, var.y, nome.x, nome.y){
+  médias<-tapply(var.y, var.x, mean)
+  desvios<-tapply(var.y, var.x, sd)
+  x<-1:nlevels(var.x)
+  
+  plot(x, médias, ylim=range(c(médias-desvios, médias+desvios)), pch=16,
+     axes=F, xlab=nome.x, ylab=nome.y)
+
+axis(2, las=1)
+axis(1, x, levels(var.x))
+box()
+
+arrows(x, médias-desvios, x, médias+desvios, angle=90, code=3, length=0.05)
+  
+}
+
+```
+
+E aí, será que funcionou, hein? Só vamos saber testando, vamos lá! Vou usar outra variável, a largura das pétalas, ok? Lá vai:
+
+```{r}
+plotmédias(Species, Petal.Width, "Espécies", "Largura das pétalas")
+```
+
+Maaaaaaaassa! Deu certo! :)
+
+Agora vamos atentar para alguns detalhes. Ao criar a função, quem define os argumentos somos nós, ok? Então eu criei a funçãod e uma maneira que eu acho bem prática e funcional, com quatro argumentos. Na ordem:
+
+* `var.x` é a variável que você quer no eixo x;
+* `var.y` a que você quer no y;
+* `nome.x` é o nome que você quer no eixo x, sempre entre aspas, beleza?
+* `nome.y` é o mesmo que acima, pro y.
+
+Agora ficou moleza de usar, né? Então agora você vai fazer assim: [baixe este arquivo](https://dl.dropboxusercontent.com/u/12074355/Cantinho%20do%20R/plotm%C3%A9dias.R), que é a versão desta função criada acima, mas salva em um arquivo de script do R.
+
+Salve o arquivo na sua pasta de trabalho do R (se você sempre usa pasta diferentes, é só salvarb cópias dele em cada uma; o arquivo é pequeno, não tem erro).
+
+Com ele salvo, a vida vai ficar super fácil: você vai só precisar usar a função `source` pro R carregar o arquivo e entender que ele cria uma nova função, e pronto. Você nem precisa abrir o arquivo como script! É só dar o `source` e acabou.
+
+Vou mostrar, e de quebra usando outro conjunto de dados:
+
+
+```{r}
+#Carregando outros dados, só pra variar um pouco:
+setwd("C:/R/Cantinho do R") #Aqui mude para o seu próprio diretório de trabalho, claro
+data(InsectSprays)
+attach(InsectSprays)
+
+#Carregando a nossa função, lembre-se de deixá-la no seu diretório de trabalho:
+source("plotmédias.R")
+
+plotmédias(spray, count, "Tipo de inseticida", "Número de insetos")
+
+```
+
+Fantástico, não é? :D
+
+Agora leve a sua função pra casa, e seja feliz. Espero que tenha aprendido um pouco pelo caminho também, mas o mais legal é isso, ter a função prontinha para quando precisar.
+
+
+\ 
+
+************
+
+\ 
+
+*Bom, pessoal, é isso aí! Espero que a função criada aqui possa ser útil para vocês.*
+
+*Abraços, e até o próximo script!*
+
+*Prof Marcos*
