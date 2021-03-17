@@ -2,7 +2,7 @@
 
 Espelho do blog Cantinho do R; local para se compartilhar scripts! :D
 
-##Se você não estiver entendendo nada...
+## Se você não estiver entendendo nada...
 
 O Cantinho do R é o meu blog criado para promover  o aprendizado do R voltado para Ciências Biológicas. Ele nasceu das minhas experiências como professor de Bioestatística aqui na UFAL, em Maceió, e cresceu com a ajuda de muitas pessoas com uma campanha de financiamento coletivo.
 
